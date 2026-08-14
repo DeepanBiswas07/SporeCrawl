@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sporecrawl</title>
+<meta name="author" content="Deepan Biswas">
+<meta name="description" content="You are not a monster spawner. You are the food chain. An incremental game about evolving a dungeon that eats heroes.">
+<meta name="theme-color" content="#06070a">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%2306070a'/%3E%3Cpath d='M4 18a12 12 0 0 1 24 0z' fill='%235ce89a'/%3E%3Cpath d='M13 18h6v6c0 2-1.3 3-3 3s-3-1-3-3z' fill='%233fbf7d'/%3E%3Ccircle cx='25' cy='7' r='2' fill='%235ce89a'/%3E%3Ccircle cx='7' cy='9' r='1.5' fill='%235ce89a' opacity='.7'/%3E%3C/svg%3E"><path d='M7 3c0 5 10 5 10 10S7 18 7 21M17 3c0 5-10 5-10 10s10 5 10 8'/></svg>">
+<meta name="color-scheme" content="dark">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Sporecrawl">
+<meta property="og:description" content="You do not command monsters. You are the food chain. An incremental game about evolving a dungeon that eats heroes.">
+<meta property="og:image" content="icon.svg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Sporecrawl">
+<meta name="twitter:description" content="You do not command monsters. You are the food chain.">
+<meta name="twitter:image" content="icon.svg">
+<link rel="manifest" href="manifest.json">
+<link rel="stylesheet" href="css/style.css?v=11">
+</head>
+<body>
+
+<canvas id="bgfx" aria-hidden="true"></canvas>
+
+<!-- ============ COLD OPEN ============ -->
+<div id="boot" class="boot">
+  <canvas id="bootCanvas" aria-hidden="true"></canvas>
+  <div class="boot-inner">
+    <h1 class="boot-title">SPORE<span>CRAWL</span></h1>
+    <div class="boot-rule"></div>
+    <p class="boot-sub">You do not command monsters.<br>You are the thing they are part of.</p>
+    <div class="boot-actions">
+      <button id="btnNewGame" class="btn btn-lg btn-primary">Wake up</button>
+      <button id="btnContinue" class="btn btn-lg hidden">Return to the dark</button>
+    </div>
+    <p class="boot-foot">Autosaves locally · no account · works offline</p>
+    <p class="boot-by">Made by <a href="https://github.com/DeepanBiswas07" target="_blank" rel="noopener noreferrer">Deepan</a></p>
+  </div>
+</div>
+
+<!-- ============ APP ============ -->
+<div id="app" class="app hidden">
+
+  <header class="topbar">
+    <div class="brand" id="brandBtn" data-tip="<b class='tth'>How the dungeon works</b>Open the guide.">
+      <span data-ico="spore" data-size="20"></span>
+      <span class="brand-text">SPORE<b>CRAWL</b></span>
+    </div>
+
+    <div class="res-strip" id="resStrip">
+      <div class="res res-bio veiled" id="resBioWrap"
+           data-tip="<b class='tth'>Biomass</b>Harvested from everything that dies in your dungeon, and generated passively by producers and decomposers. Breeds population and builds rooms.">
+        <span data-ico="biomass"></span>
+        <span class="res-body"><b id="resBio">0</b><i id="resBioRate">+0/s</i></span>
+      </div>
+      <div class="res res-ess veiled" id="resEssWrap"
+           data-tip="<b class='tth'>Essence</b>What remains of a hero once the biomass is taken. Buys gene levels and evolutions.">
+        <span data-ico="essence"></span>
+        <span class="res-body"><b id="resEss">0</b><i id="resEssRate">+0/s</i></span>
+      </div>
+      <div class="res res-gold veiled" id="resGoldWrap"
+           data-tip="<b class='tth'>Plunder</b>Gear and coin looted off the dead. Carves dungeon rooms and traps.">
+        <span data-ico="plunder"></span>
+        <span class="res-body"><b id="resGold">0</b><i>plunder</i></span>
+      </div>
+      <div class="res res-dna veiled" id="resDnaWrap"
+           data-tip="<b class='tth'>Genome</b>Survives the Collapse. Buys permanent mutations.">
+        <span data-ico="genome"></span>
+        <span class="res-body"><b id="resDna">0</b><i id="resDnaGain">on collapse</i></span>
+      </div>
+      <div class="res res-cell veiled" id="resCellWrap"
+           data-tip="<b class='tth'>Primordial Cells</b>The deepest currency. Unlocks Mythic evolution and multiplies everything, permanently.">
+        <span data-ico="cell"></span>
+        <span class="res-body"><b id="resCell">0</b><i>primordial</i></span>
+      </div>
+    </div>
+
+    <div class="topbtns">
+      <button class="icobtn wide veiled" id="btnSpeed"><span data-ico="play" data-size="13"></span><span class="sub" id="speedLabel">1×</span></button>
+      <button class="icobtn" id="btnMute" data-tip="Sound"><span data-ico="sound"></span></button>
+      <button class="icobtn" id="btnFull" data-tip="Fullscreen"><span data-ico="expand"></span></button>
+      <button class="icobtn" id="btnSettings" data-tip="Settings, statistics and save"><span data-ico="settings"></span></button>
+    </div>
+  </header>
+
+  <main class="layout">
+
+    <!-- LEFT -->
+    <section class="col col-left veiled">
+      <nav class="tabs veiled" id="tabs">
+        <button class="tab active veiled" data-tab="colonies"><span data-ico="colonies" data-size="17"></span><span class="tl">Colonies</span></button>
+        <button class="tab veiled" data-tab="evolve"><span data-ico="evolve" data-size="17"></span><span class="tl">Evolve</span><i class="dot hidden" id="dotEvolve"></i></button>
+        <button class="tab veiled" data-tab="dungeon"><span data-ico="dungeon" data-size="17"></span><span class="tl">Dungeon</span><i class="dot hidden" id="dotDungeon"></i></button>
+        <button class="tab veiled" data-tab="genome"><span data-ico="genome" data-size="17"></span><span class="tl">Genome</span></button>
+        <button class="tab veiled" data-tab="codex"><span data-ico="codex" data-size="17"></span><span class="tl">Codex</span></button>
+      </nav>
+      <div class="panel-scroll" id="leftPanel">
+        <div class="tabpane" id="pane-colonies"></div>
+        <div class="tabpane hidden" id="pane-evolve"></div>
+        <div class="tabpane hidden" id="pane-dungeon"></div>
+        <div class="tabpane hidden" id="pane-genome"></div>
+        <div class="tabpane hidden" id="pane-codex"></div>
+      </div>
+    </section>
+
+    <!-- CENTRE -->
+    <section class="col col-center">
+      <div class="depthbar">
+        <div class="depth-left">
+          <span class="depth-name"><span class="dd" id="depthNum">DEPTH 1</span><span class="dn" id="biomeName">The Shallow Warrens</span></span>
+          <span class="depth-wave">RAID <b id="waveNum">1</b><span id="waveBest"></span></span>
+        </div>
+        <div class="depth-right veiled" id="depthNav">
+          <button class="btn btn-sm" id="btnDepthDown" data-tip="Retreat to a shallower depth. Weaker heroes, poorer loot.">
+            <span data-ico="up" data-size="13"></span>Shallower</button>
+          <button class="btn btn-sm" id="btnDepthUp" data-tip="Dig deeper. Heavier heroes, far richer loot.">
+            Deeper<span data-ico="down" data-size="13"></span></button>
+        </div>
+      </div>
+
+      <div class="objective" id="objective"></div>
+
+      <div class="stage-wrap">
+        <canvas id="stage"></canvas>
+        <div class="stage-overlay" id="stageOverlay"></div>
+        <div class="banner" id="banner"></div>
+      </div>
+
+      <div class="wavebar veiled">
+        <div class="wb-track"><div class="wb-fill" id="raidFill"></div><span class="wb-label" id="raidLabel">Listening…</span></div>
+        <button class="btn btn-primary" id="btnRaid">Open the gates</button>
+      </div>
+
+      <div class="abilities veiled" id="abilities"></div>
+    </section>
+
+    <!-- RIGHT -->
+    <section class="col col-right veiled">
+      <div class="card eco-card veiled">
+        <div class="card-h"><h3>Ecosystem</h3><span class="pill" id="stabPill">—</span></div>
+        <div class="eco-body">
+          <div class="pyramid" id="pyramid"></div>
+          <div class="eco-stats" id="ecoStats"></div>
+          <div class="eco-advice" id="ecoAdvice"></div>
+        </div>
+      </div>
+
+      <div class="card adapt-card veiled">
+        <div class="card-h"><h3>Hero Adaptation</h3><span class="pill" id="adaptPill">—</span></div>
+        <div class="adapt-body" id="adaptBody"></div>
+        <p class="hint">They learn from concentration. Damage split across many types teaches them almost nothing — a dungeon that only does one thing eventually does nothing.</p>
+      </div>
+
+      <div class="card log-card veiled">
+        <div class="card-h"><h3>Dungeon Log</h3></div>
+        <div class="log" id="log"></div>
+      </div>
+    </section>
+  </main>
+
+  <div class="toasts" id="toasts"></div>
+</div>
+
+<!-- ============ OVERLAYS ============ -->
+<div class="dimmer" id="dimmer"></div>
+<div class="decree" id="decree"></div>
+
+<div class="modal-bg hidden" id="modalBg">
+  <div class="modal" id="modal">
+    <button class="modal-x" id="modalX"><span data-ico="close" data-size="15"></span></button>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<div class="tooltip hidden" id="tooltip"></div>
+
+<script src="js/boot.js?v=11"></script>
+<script src="js/util.js?v=11"></script>
+<script src="js/gl.js?v=11"></script>
+<script src="js/icons.js?v=11"></script>
+<script src="js/audio.js?v=11"></script>
+<script src="js/data.js?v=11"></script>
+<script src="js/state.js?v=11"></script>
+<script src="js/sprites.js?v=11"></script>
+<script src="js/ecosystem.js?v=11"></script>
+<script src="js/combat.js?v=11"></script>
+<script src="js/render.js?v=11"></script>
+<script src="js/reveal.js?v=11"></script>
+<script src="js/objectives.js?v=11"></script>
+<script src="js/ui.js?v=11"></script>
+<script src="js/game.js?v=11"></script>
+<script>
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('sw.js').catch(function () { /* offline support is optional */ });
+  });
+}
+</script>
+</body>
+</html>

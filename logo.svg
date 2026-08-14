@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Sporecrawl">
+  <defs>
+    <linearGradient id="cap" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8affc0"/>
+      <stop offset="1" stop-color="#3fbf7d"/>
+    </linearGradient>
+    <radialGradient id="halo" cx="50%" cy="46%" r="52%">
+      <stop offset="0" stop-color="#5ce89a" stop-opacity=".30"/>
+      <stop offset="1" stop-color="#5ce89a" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+    <circle cx="256" cy="238" r="230" fill="url(#halo)"/>
+
+  <!-- spores drifting off the cap -->
+  <g fill="#5ce89a">
+    <circle cx="392" cy="122" r="13" opacity=".85"/>
+    <circle cx="436" cy="186" r="8"  opacity=".55"/>
+    <circle cx="352" cy="66"  r="7"  opacity=".40"/>
+    <circle cx="104" cy="150" r="10" opacity=".60"/>
+    <circle cx="66"  cy="212" r="6"  opacity=".35"/>
+  </g>
+
+  <!-- stem -->
+  <path d="M224 286h64v92c0 26-13 40-32 40s-32-14-32-40z" fill="#123d2a"/>
+  <path d="M256 286v132" stroke="#5ce89a" stroke-width="7" stroke-linecap="round" opacity=".5"/>
+
+  <!-- cap -->
+  <path d="M62 292c0-107 87-194 194-194s194 87 194 194z" fill="url(#cap)"/>
+
+  <!-- gills: the spore print, radiating from the stem -->
+  <g stroke="#04150d" stroke-width="9" stroke-linecap="round" opacity=".55">
+    <path d="M256 292V150"/>
+    <path d="M198 292l-30-124"/>
+    <path d="M314 292l30-124"/>
+    <path d="M146 292l-56-96"/>
+    <path d="M366 292l56-96"/>
+    <path d="M100 292l-30-40"/>
+    <path d="M412 292l30-40"/>
+  </g>
+
+  <!-- cap rim -->
+  <path d="M62 292h388" stroke="#0c2a1d" stroke-width="14" stroke-linecap="round"/>
+</svg>

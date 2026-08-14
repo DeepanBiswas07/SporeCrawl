@@ -1,0 +1,32 @@
+# build output — produced by `node tools/build.js --zip`, attach to a Release instead
+dist/
+
+# dependencies (the project has none; this is future-proofing)
+node_modules/
+package-lock.json
+yarn.lock
+
+# editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# local agent / tooling config
+.claude/
+
+# maintainer-only notes — kept on disk, never published
+docs/RELEASING.md
+
+# os cruft
+.DS_Store
+._*
+Thumbs.db
+desktop.ini
+
+# logs and scratch
+*.log
+npm-debug.log*
+tmp/
+scratch/

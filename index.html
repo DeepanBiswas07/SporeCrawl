@@ -24,7 +24,7 @@
 
 <canvas id="bgfx" aria-hidden="true"></canvas>
 
-<!-- ============ COLD OPEN ============ -->
+<!-- Boot screen -->
 <div id="boot" class="boot">
   <canvas id="bootCanvas" aria-hidden="true"></canvas>
   <div class="boot-inner">
@@ -40,7 +40,7 @@
   </div>
 </div>
 
-<!-- ============ APP ============ -->
+<!-- Main UI -->
 <div id="app" class="app hidden">
 
   <header class="topbar">
@@ -87,7 +87,6 @@
 
   <main class="layout">
 
-    <!-- LEFT -->
     <section class="col col-left veiled">
       <nav class="tabs veiled" id="tabs">
         <button class="tab active veiled" data-tab="colonies"><span data-ico="colonies" data-size="17"></span><span class="tl">Colonies</span></button>
@@ -105,7 +104,6 @@
       </div>
     </section>
 
-    <!-- CENTRE -->
     <section class="col col-center">
       <div class="depthbar">
         <div class="depth-left">
@@ -136,7 +134,6 @@
       <div class="abilities veiled" id="abilities"></div>
     </section>
 
-    <!-- RIGHT -->
     <section class="col col-right veiled">
       <div class="card eco-card veiled">
         <div class="card-h"><h3>Ecosystem</h3><span class="pill" id="stabPill">—</span></div>
@@ -163,7 +160,7 @@
   <div class="toasts" id="toasts"></div>
 </div>
 
-<!-- ============ OVERLAYS ============ -->
+<!-- Modals & overlays -->
 <div class="dimmer" id="dimmer"></div>
 <div class="decree" id="decree"></div>
 
@@ -194,7 +191,7 @@
 <script>
 if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
   window.addEventListener('load', function () {
-    navigator.serviceWorker.register('sw.js').catch(function () { /* offline support is optional */ });
+    navigator.serviceWorker.register('sw.js').catch(function () { /* optional offline support */ });
   });
 }
 </script>

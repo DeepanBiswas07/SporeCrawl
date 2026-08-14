@@ -1,6 +1,3 @@
-/* ============================================================
-   util.js — number formatting, math, DOM, RNG
-   ============================================================ */
 (function (global) {
   'use strict';
 
@@ -8,7 +5,6 @@
     'Dc', 'UDc', 'DDc', 'TDc', 'QaDc', 'QiDc', 'SxDc', 'SpDc', 'OcDc', 'NoDc',
     'Vg', 'UVg', 'DVg', 'TVg', 'QaVg', 'QiVg', 'SxVg', 'SpVg', 'OcVg', 'NoVg', 'Tg'];
 
-  /** Compact number formatting: 1234 -> 1.23K */
   function fmt(n, dec) {
     if (n === Infinity) return '∞';
     if (!isFinite(n) || isNaN(n)) return '0';
@@ -30,16 +26,13 @@
     return (neg ? '-' : '') + s + SUFFIX[tier];
   }
 
-  /** Whole number with thousand separators (small values only) */
   function fmtInt(n) {
     if (n < 1e6) return Math.floor(n).toLocaleString('en-US');
     return fmt(n);
   }
 
-  /** 0.734 -> "73%" */
   function pct(x, dec) { return (x * 100).toFixed(dec || 0) + '%'; }
 
-  /** seconds -> 1h 04m 12s */
   function time(s) {
     if (!isFinite(s) || s < 0) return '—';
     s = Math.floor(s);
@@ -59,7 +52,6 @@
   const pick = arr => arr[Math.floor(Math.random() * arr.length)];
   const chance = p => Math.random() < p;
 
-  /** deterministic hash-based rng, so a species always looks the same */
   function hash(str) {
     let h = 2166136261 >>> 0;
     for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; }
@@ -76,7 +68,6 @@
   }
   function seeded(str) { return mulberry(hash(str)); }
 
-  /* ---------- DOM ---------- */
   const $ = sel => document.querySelector(sel);
   const $$ = sel => Array.from(document.querySelectorAll(sel));
   function el(tag, cls, html) {
@@ -87,7 +78,6 @@
   }
   function on(node, ev, fn, opt) { node.addEventListener(ev, fn, opt); return node; }
 
-  /* ---------- colour ---------- */
   function shade(hex, amt) {
     const c = hex.replace('#', '');
     const n = parseInt(c.length === 3 ? c.split('').map(x => x + x).join('') : c, 16);
@@ -102,7 +92,6 @@
     return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
   }
 
-  /** Roman numerals for tiers/levels */
   function roman(n) {
     if (n < 1) return '';
     const map = [[1000, 'M'], [900, 'CM'], [500, 'D'], [400, 'CD'], [100, 'C'], [90, 'XC'],
@@ -112,13 +101,11 @@
     return out;
   }
 
-  /** sum of geometric series: base*r^start ... base*r^(start+count-1) */
   function geoSum(base, r, start, count) {
     if (count <= 0) return 0;
     if (Math.abs(r - 1) < 1e-9) return base * count;
     return base * Math.pow(r, start) * (Math.pow(r, count) - 1) / (r - 1);
   }
-  /** how many items can be bought with `budget` starting at level `start` */
   function geoMaxBuy(base, r, start, budget) {
     if (budget < base * Math.pow(r, start)) return 0;
     const v = budget * (r - 1) / (base * Math.pow(r, start)) + 1;

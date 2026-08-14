@@ -1,12 +1,3 @@
-/* ============================================================
-   sw.js — offline support.
-
-   Strategy is deliberately conservative so a stale cache can never
-   ship a broken build:
-     · versioned assets (…?v=N) are immutable → cache-first
-     · index.html is network-first, cache only as a fallback
-   Bump CACHE when you release and the old one is deleted on activate.
-   ============================================================ */
 const CACHE = 'sporecrawl-v11';
 
 const CORE = [
@@ -33,13 +24,12 @@ self.addEventListener('fetch', e => {
   if (req.method !== 'GET') return;
 
   const url = new URL(req.url);
-  if (url.origin !== location.origin) return;   // never touch third-party requests
+  if (url.origin !== location.origin) return;
 
   const isDocument = req.mode === 'navigate' ||
     (req.headers.get('accept') || '').includes('text/html');
 
   if (isDocument) {
-    // network-first: a new release must always win
     e.respondWith(
       fetch(req)
         .then(res => {
@@ -52,7 +42,6 @@ self.addEventListener('fetch', e => {
     return;
   }
 
-  // versioned assets are immutable — serve from cache, fill on first miss
   e.respondWith(
     caches.match(req).then(hit => hit || fetch(req).then(res => {
       if (res && res.status === 200 && res.type === 'basic') {

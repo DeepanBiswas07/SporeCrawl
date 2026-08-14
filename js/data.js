@@ -1,50 +1,42 @@
-/* ============================================================
-   data.js — all static game content & tuning constants
-   ============================================================ */
 (function (global) {
   'use strict';
 
-  /* ---------------- tuning ---------------- */
   const CONF = {
-    waveScale: 1.105,      // hero power growth per global wave
-    biomeStep: 1.55,       // extra power multiplier per biome entered
-    rewardScale: 1.092,    // reward growth per global wave
+    waveScale: 1.105,
+    biomeStep: 1.55,
+    rewardScale: 1.092,
     baseHeroHP: 26,
     baseHeroATK: 3.2,
     baseReward: 12,
 
-    popCostGrowth: 1.135,  // biomass cost growth per population point
-    geneCostGrowth: 1.17,  // essence cost growth per gene level
-    geneMult: 1.09,        // stat multiplier per gene level
-    popExp: 0.82,          // population -> power exponent (diminishing)
+    popCostGrowth: 1.135,
+    geneCostGrowth: 1.17,
+    geneMult: 1.09,
+    popExp: 0.82,
 
-    stageMult: [1, 6.5, 46, 340, 2900],       // combat stat multiplier per stage
-    stageProdMult: [1, 5.5, 34, 230, 1800],   // ecosystem output per stage
-    stageFood: [1, 3.2, 11, 38, 130],         // food demand per stage
+    stageMult: [1, 6.5, 46, 340, 2900],
+    stageProdMult: [1, 5.5, 34, 230, 1800],
+    stageFood: [1, 3.2, 11, 38, 130],
 
-    battleSlots: 8,        // colonies that can fight at once
-    raidGapBase: 3.2,      // seconds between raids
-    coreHP: 5,             // seconds of grace once the battle line breaks (nothing revives now)
+    battleSlots: 8,
+    raidGapBase: 3.2,
+    coreHP: 5,
 
-    adaptGain: 0.075,      // adaptation gained per raid at total concentration
-    adaptConc: 1.7,        // ^ applied to each type's damage SHARE, so spreading
-                           //   your damage teaches them far less than focusing it
-    adaptDecay: 0.030,     // decay per raid for types you stop using
-    adaptResist: 0.72,     // max damage reduction at 100% adaptation
-    doctrineAt: 0.28,      // adaptation above this and the hero roster shifts too
+    adaptGain: 0.075,
+    adaptConc: 1.7,
+    adaptDecay: 0.030,
+    adaptResist: 0.72,
+    doctrineAt: 0.28,
 
     offlineCapBase: 4 * 3600,
-    // Genome scales off the reward curve itself, so it grows exponentially with
-    // depth — the only shape that can keep pushing an exponential hero curve.
     dnaPow: 0.125,
     dnaBase: 24,
     dnaMinWave: 55,
-    cellStart: 330,        // primordial cells only start accruing this deep
-    cellDiv: 55,           // and accrue sub-linearly, or 1.9^cells eats the universe
+    cellStart: 330,
+    cellDiv: 55,
     cellExp: 0.8
   };
 
-  /* ---------------- damage types ---------------- */
   const TYPES = {
     phys: { id: 'phys', name: 'Physical', color: '#d9d3c4', icon: '⚔' },
     pois: { id: 'pois', name: 'Poison', color: '#8de84f', icon: '☣' },
@@ -55,7 +47,6 @@
   };
   const TYPE_LIST = ['phys', 'pois', 'fire', 'frost', 'arc', 'shad'];
 
-  /* ---------------- trophic roles ---------------- */
   const ROLES = {
     producer: { id: 'producer', name: 'Producer', short: 'PROD', color: '#8de84f', ideal: 8, icon: '🌱',
       desc: 'Grows biomass out of nothing but damp and dark. Feeds everything above it.' },
@@ -80,9 +71,6 @@
     apex:       { hp: 33, atk: 13.5, spd: 0.85, food: 9, prod: 0 }
   };
 
-  /* ---------------- monster families ----------------
-     [id, name, role, dmg, shape, c1, c2, unlockWave, passiveId, tint...]
-  -------------------------------------------------- */
   const PASSIVES = {
     split:     { name: 'Binary Fission', icon: '◐', desc: 'Splits and thickens: +{v}% attack for every colony already routed this raid.' },
     spores:    { name: 'Spore Bloom', icon: '❀', desc: '+{v}% biomass from every source.' },
@@ -103,7 +91,6 @@
   };
 
   const FAM_RAW = [
-    // id, name, role, dmg, shape, colA, colB, unlockWave, passive, passiveVal, names[5], blurb
     ['ooze', 'Ooze', 'decomposer', 'pois', 'blob', '#5ce89a', '#1f7a4d', 1, 'split', 30,
       ['Slime', 'Poison Slime', 'Corrosive Ooze', 'King Slime', 'Acid Ocean'],
       'It was here before you. It will digest whatever is here after.'],
@@ -177,13 +164,9 @@
   });
   const FAM_BY_ID = {}; FAMS.forEach(f => FAM_BY_ID[f.id] = f);
 
-  /* stage gates — you may not evolve past these until the depth is reached */
   const STAGE_GATE = [0, 10, 60, 150, 330];
   const STAGE_LABEL = ['Base', 'Evolved', 'Greater', 'Ascendant', 'Mythic'];
 
-  /* ---------------- heroes ----------------
-     [id, name, tier, hpMul, atkMul, spd, dmg, shape, color, ability, bio, ess, gold, resists]
-  -------------------------------------------------- */
   const HERO_RAW = [
     ['villager', 'Villager', 1, 0.55, 0.5, 0.9, 'phys', 'peasant', '#b99a6b', null, 1.0, 0.5, 0.6, {}],
     ['militia', 'Militia', 1, 0.9, 0.8, 0.95, 'phys', 'soldier', '#8fa2b5', null, 1.2, 0.7, 0.9, {}],
@@ -232,9 +215,8 @@
     bio: r[10], ess: r[11], gold: r[12], res: r[13]
   }));
   const HERO_BY_ID = {}; HEROES.forEach(h => HERO_BY_ID[h.id] = h);
-  const TIER_WAVE = [0, 1, 12, 30, 58, 95, 145, 205, 285]; // min global wave per hero tier
+  const TIER_WAVE = [0, 1, 12, 30, 58, 95, 145, 205, 285];
 
-  /* stagger arrivals inside a tier so a new hero class shows up every few raids */
   {
     const perTier = {};
     HEROES.forEach(h => { (perTier[h.tier] = perTier[h.tier] || []).push(h); });
@@ -266,7 +248,6 @@
     pierce: { name: 'Sunder', desc: 'Ignores 60% of colony armour.' }
   };
 
-  /* ---------------- legends (boss heroes) ---------------- */
   const LEGENDS = [
     ['Sir Aldric the Unbroken', 'knight', '#ffe9a8', 'aura'],
     ['Lyra Dawnblade', 'knight', '#fff2c4', 'crit'],
@@ -289,7 +270,6 @@
   const LEGEND_TITLES = ['', 'the Returned', 'the Twice-Slain', 'the Undying', 'the Vengeful',
     'the Eternal', 'Who Will Not Stay Dead', 'the Inevitable', 'the Absolute'];
 
-  /* ---------------- biomes ---------------- */
   const BIOMES = [
     { name: 'The Shallow Warrens', waves: 40, sky: ['#132420', '#0a1512'], rock: '#1d3630', glow: '#5ce89a', loot: 1, blurb: 'Damp. Forgettable. Yours.' },
     { name: 'Fungal Hollows', waves: 50, sky: ['#1d1630', '#0d0a18'], rock: '#2e2246', glow: '#c88bff', loot: 1.5, blurb: 'The air is 40% spore by volume.' },
@@ -302,12 +282,9 @@
     { name: 'The Living Wound', waves: 120, sky: ['#26101f', '#100610'], rock: '#3d1a34', glow: '#ff8fd0', loot: 26.6, blurb: 'The dungeon stopped pretending to be geology.' },
     { name: 'Primordial Core', waves: 999, sky: ['#1a0e28', '#080412'], rock: '#2c1846', glow: '#c98fff', loot: 40, blurb: 'The first dark. It remembers being alone.' }
   ];
-  // cumulative wave offsets
+
   let acc = 0; BIOMES.forEach(b => { b.startWave = acc + 1; acc += b.waves; b.endWave = acc; });
 
-  /* ---------------- dungeon rooms ----------------
-     effect kinds are resolved in ecosystem.js / combat.js
-  -------------------------------------------------- */
   const ROOMS = [
     { id: 'pool', name: 'Spawning Pool', icon: '🕳', max: 8, cur: 'gold', cost: 60, growth: 4.4, unlock: 0,
       desc: 'Carve out another chamber. +1 colony slot.', eff: v => '+' + v + ' colony slot' },
@@ -354,7 +331,6 @@
       desc: 'The dungeon dreams while you are away.', eff: v => '+' + v + 'h offline accumulation' }
   ];
 
-  /* ---------------- mutations (DNA tree) ---------------- */
   const MUT_BRANCHES = [
     { id: 'pred', name: 'Predation', icon: '🦷', color: '#ff5f6d' },
     { id: 'fec', name: 'Fecundity', icon: '🥚', color: '#5ce89a' },
@@ -365,7 +341,6 @@
   ];
 
   const MUTATIONS = [
-    // predation
     { id: 'fang', b: 'pred', name: 'Sharpened Fangs', icon: '🦷', desc: '+{v}% colony attack.', f: v => 1 + v * .24 },
     { id: 'instinct', b: 'pred', name: 'Killer Instinct', icon: '⚡', desc: '+{v}% colony attack speed.', f: v => 1 + v * .075 },
     { id: 'frenzy', b: 'pred', name: 'Blood Frenzy', icon: '🩸', desc: '+{v}% attack per hero already slain this raid.', f: v => v * 1.5 },
@@ -375,7 +350,6 @@
     { id: 'overwhelm', b: 'pred', name: 'Overwhelm', icon: '💥', desc: 'Critical chance +{v}%, criticals hit for triple.', f: v => v * .045 },
     { id: 'extinct', b: 'pred', name: 'Extinction Event', icon: '☄', desc: 'Colony attack ×{v}.', f: v => Math.pow(2.5, v) },
 
-    // fecundity
     { id: 'fertile', b: 'fec', name: 'Fertile Spawn', icon: '🥚', desc: 'Population cost ×{v}.', f: v => Math.pow(.951, v) },
     { id: 'division', b: 'fec', name: 'Rapid Division', icon: '⧉', desc: '+{v}% biomass gain.', f: v => 1 + v * .28 },
     { id: 'digest', b: 'fec', name: 'Efficient Digestion', icon: '🌀', desc: '+{v}% essence gain.', f: v => 1 + v * .18 },
@@ -385,7 +359,6 @@
     { id: 'bloom', b: 'fec', name: 'Bloom', icon: '❀', desc: 'All resource gain ×{v}.', f: v => Math.pow(1.75, v) },
     { id: 'hyper', b: 'fec', name: 'Hyperfertility', icon: '∞', desc: 'Population power exponent +{v}.', f: v => v * .015 },
 
-    // symbiosis
     { id: 'web', b: 'sym', name: 'Balanced Web', icon: '🕸', desc: '+{v} flat ecosystem stability.', f: v => v * .032 },
     { id: 'cycle', b: 'sym', name: 'Nutrient Cycling', icon: '♻', desc: '+{v}% producer & decomposer output.', f: v => 1 + v * .24 },
     { id: 'mutual', b: 'sym', name: 'Mutualism', icon: '🤝', desc: 'Each distinct family deployed grants +{v}% global power.', f: v => v * 1.35 },
@@ -395,7 +368,6 @@
     { id: 'balance', b: 'sym', name: 'Perfect Balance', icon: '☯', desc: 'A perfectly balanced pyramid grants ×{v} to everything.', f: v => 1 + v * .34 },
     { id: 'gaia', b: 'sym', name: 'Gaia', icon: '🜨', desc: 'Global multiplier ×{v}.', f: v => Math.pow(2.6, v) },
 
-    // adaptation
     { id: 'shift', b: 'adp', name: 'Shifting Biology', icon: '🧬', desc: 'Adaptation builds at ×{v} speed.', f: v => Math.pow(.944, v) },
     { id: 'immune', b: 'adp', name: 'Immune Memory', icon: '🛡', desc: 'Adaptation decays {v}% faster between raids.', f: v => 1 + v * .24 },
     { id: 'camo', b: 'adp', name: 'Camouflage', icon: '🍃', desc: '+{v}% colony health.', f: v => 1 + v * .24 },
@@ -403,10 +375,8 @@
     { id: 'mimic', b: 'adp', name: 'Mimicry', icon: '🎭', desc: '{v}% of all damage is re-dealt as your least-adapted type.', f: v => Math.min(85, v * 5.5) },
     { id: 'antigen', b: 'adp', name: 'Antigen Purge', icon: '💉', desc: 'Adaptation caps at {v}% instead of 100%.', f: v => Math.max(20, 100 - v * 6.7) },
     { id: 'converge', b: 'adp', name: 'Convergent Evolution', icon: '⧗', desc: 'Every colony deals +{v}% damage.', f: v => v * 14 },
-    // level 0 must mean "no cap" — this used to sit at 45% before you bought anything
     { id: 'unknow', b: 'adp', name: 'Unknowable', icon: '❓', desc: 'Heroes can never adapt above {v}%.', f: v => v ? Math.max(8, 52 - v * 5.5) : 100 },
 
-    // dominion
     { id: 'deeper', b: 'dom', name: 'Deeper Warrens', icon: '🕳', desc: '+{v} colony slots.', f: v => v },
     { id: 'heart', b: 'dom', name: 'Second Heart', icon: '💠', desc: '+{v}s of core grace.', f: v => v * 2.7 },
     { id: 'ironeco', b: 'dom', name: 'Iron Ecology', icon: '⛓', desc: 'Starvation penalty reduced by {v}%.', f: v => Math.min(.95, v * .083) },
@@ -416,7 +386,6 @@
     { id: 'warlord', b: 'dom', name: 'Warlord', icon: '🎖', desc: 'Battle line holds {v} extra colonies.', f: v => v },
     { id: 'sovereign', b: 'dom', name: 'Sovereign', icon: '👑', desc: 'Genome gained on Collapse ×{v}.', f: v => Math.pow(1.35, v) },
 
-    // void
     { id: 'slumber', b: 'void', name: 'Timeless Slumber', icon: '💤', desc: '+{v}h offline accumulation.', f: v => v * 1.2 },
     { id: 'memory', b: 'void', name: 'Deep Memory', icon: '🧠', desc: 'Offline runs at {v}% efficiency.', f: v => Math.min(1.6, .35 + v * .06) },
     { id: 'echo', b: 'void', name: 'Echoes', icon: '〰', desc: 'Auto-raid speed +{v}%.', f: v => 1 + v * .10 },
@@ -427,8 +396,6 @@
     { id: 'primal', b: 'void', name: 'Primordial Will', icon: '◉', desc: 'All multipliers ×{v}.', f: v => Math.pow(2.4, v) }
   ];
 
-  /* Cost / growth / max are assigned by depth within a branch, so every branch
-     has the same shape: cheap early nodes, monstrous capstones. */
   const MUT_TIERS = [
     [1, 1.16, 25], [3, 1.18, 20], [8, 1.20, 20], [25, 1.24, 15],
     [80, 1.28, 25], [300, 1.34, 25], [1200, 1.45, 40], [6000, 2.20, 60]
@@ -440,20 +407,18 @@
       const [cost, g, max] = MUT_TIERS[Math.min(p, MUT_TIERS.length - 1)];
       m.cost = cost; m.g = g; m.max = max;
     }
-    // hand-priced exceptions: things that must stay rare no matter how rich you get
-    MUT_BY_ID_OVERRIDE(MUTATIONS, 'deeper', { cost: 12, g: 2.9, max: 8 });     // colony slots
-    MUT_BY_ID_OVERRIDE(MUTATIONS, 'warlord', { cost: 1200, g: 2.1, max: 8 });  // battle line
-    MUT_BY_ID_OVERRIDE(MUTATIONS, 'unknow', { cost: 6000, g: 1.9, max: 8 });   // hard caps
+    MUT_BY_ID_OVERRIDE(MUTATIONS, 'deeper', { cost: 12, g: 2.9, max: 8 });
+    MUT_BY_ID_OVERRIDE(MUTATIONS, 'warlord', { cost: 1200, g: 2.1, max: 8 });
+    MUT_BY_ID_OVERRIDE(MUTATIONS, 'unknow', { cost: 6000, g: 1.9, max: 8 });
     MUT_BY_ID_OVERRIDE(MUTATIONS, 'hyper', { cost: 6000, g: 1.9, max: 8 });
-    MUT_BY_ID_OVERRIDE(MUTATIONS, 'sovereign', { cost: 6000, g: 1.75, max: 12 }); // feeds itself
-    MUT_BY_ID_OVERRIDE(MUTATIONS, 'sing', { cost: 1200, g: 1.60, max: 12 });   // game speed
+    MUT_BY_ID_OVERRIDE(MUTATIONS, 'sovereign', { cost: 6000, g: 1.75, max: 12 });
+    MUT_BY_ID_OVERRIDE(MUTATIONS, 'sing', { cost: 1200, g: 1.60, max: 12 });
   }
   function MUT_BY_ID_OVERRIDE(list, id, props) {
     const m = list.find(x => x.id === id); if (m) Object.assign(m, props);
   }
   const MUT_BY_ID = {}; MUTATIONS.forEach(m => MUT_BY_ID[m.id] = m);
 
-  /* ---------------- active abilities ---------------- */
   const ABILITIES = [
     { id: 'cavein', name: 'Cave-In', icon: '🪨', cd: 42, dur: 0, unlock: 5, key: '1',
       desc: 'The ceiling remembers it is heavy. Deals 900% of your dungeon DPS to every hero.' },
@@ -469,7 +434,6 @@
       desc: 'Your entire ecosystem doubles in size and power for 20 seconds.' }
   ];
 
-  /* ---------------- achievements ---------------- */
   function A(id, name, desc, icon, check, rew, rewTxt) {
     return { id, name, desc, icon, check, rew, rewTxt };
   }
@@ -542,7 +506,6 @@
     A('play10h', 'Ten Hours Down Here', 'Play for 10 hours.', '⏱', g => g.stats.playTime >= 36000, 1.15, '+15% all gain')
   ];
 
-  /* ---------------- helper: hero power / rewards ---------------- */
   function biomeOf(globalWave) {
     for (let i = 0; i < BIOMES.length; i++) if (globalWave <= BIOMES[i].endWave) return i;
     return BIOMES.length - 1;

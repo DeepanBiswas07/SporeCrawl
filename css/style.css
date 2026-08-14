@@ -1,13 +1,5 @@
-/* ============================================================
-   SPORECRAWL
-   Design language: a specimen observed in a black void.
-   Matte black, hairline rules, thin grotesque caps, tabular
-   numerals, one accent that shifts with depth. No glass, no
-   rainbow gradients, no rounded pills.
-   ============================================================ */
-
 :root{
-  /* --- ground --- */
+  /* Base palette */
   --void:#06070a;
   --void-2:#0a0c10;
   --surface:rgba(255,255,255,.022);
@@ -15,18 +7,18 @@
   --rule:rgba(233,231,225,.085);
   --rule-2:rgba(233,231,225,.17);
 
-  /* --- ink --- */
+  /* Ink */
   --ink:#e9e7e1;
   --dim:#8d8e88;
   --faint:#55564f;
   --ghost:#33342f;
 
-  /* --- accent: rewritten per biome by render.js --- */
+  /* Dynamic accent */
   --accent:#5ce89a;
   --accent-soft:rgba(92,232,154,.14);
   --accent-line:rgba(92,232,154,.34);
 
-  /* --- semantic --- */
+  /* Semantic */
   --bio:#7be3a4;
   --ess:#b09aff;
   --gold:#e8b563;
@@ -64,7 +56,7 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;letter
 em{font-style:normal;color:var(--accent)}
 b,strong{font-weight:600}
 
-/* ---------- film grain + vignette: kills the flat digital look ---------- */
+/* Effects */
 body::after{
   content:'';position:fixed;inset:0;z-index:100;pointer-events:none;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.82' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.42'/%3E%3C/svg%3E");
@@ -75,22 +67,20 @@ body::before{
   background:radial-gradient(ellipse 120% 90% at 50% 45%,transparent 40%,rgba(0,0,0,.55) 100%);
 }
 
-/* ---------- scrollbars ---------- */
+/* Scrollbars */
 ::-webkit-scrollbar{width:8px;height:8px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:rgba(233,231,225,.1)}
 ::-webkit-scrollbar-thumb:hover{background:rgba(233,231,225,.2)}
 
-/* ---------- typographic primitives ---------- */
+/* Typography */
 .lbl,.card-h h3,.sec-h h4,.gbranch-h,.tab span.tl{
   font-size:9.5px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;
 }
 .num{font-family:var(--mono);font-variant-numeric:tabular-nums;letter-spacing:-.01em}
 .ico{display:block;flex:0 0 auto}
 
-/* ============================================================
-   BUTTONS
-   ============================================================ */
+/* Buttons */
 .btn{
   position:relative;
   border:1px solid var(--rule-2);
@@ -145,9 +135,7 @@ body::before{
 .icobtn.wide{width:auto;padding:0 9px;gap:5px}
 .icobtn .sub{font-family:var(--mono);font-size:10px;font-weight:600}
 
-/* ============================================================
-   COLD OPEN — the game starts as a black room
-   ============================================================ */
+/* Boot screen */
 .boot{
   position:fixed;inset:0;z-index:60;display:grid;place-items:center;
   background:var(--void);
@@ -197,9 +185,7 @@ body::before{
 .credit a{color:var(--accent);text-decoration:none;border-bottom:1px solid var(--accent-line)}
 .credit a:hover{color:var(--ink)}
 
-/* ============================================================
-   SHELL
-   ============================================================ */
+/* Topbar */
 .app{height:100%;display:flex;flex-direction:column}
 
 .topbar{
@@ -234,9 +220,7 @@ body::before{
 @keyframes tickPulse{0%{color:#fff;text-shadow:0 0 12px currentColor}100%{}}
 .topbtns{display:flex;gap:5px;flex:0 0 auto}
 
-/* ============================================================
-   LAYOUT
-   ============================================================ */
+/* Layout */
 .layout{
   flex:1 1 auto;min-height:0;display:grid;
   grid-template-columns:minmax(300px,23%) 1fr minmax(258px,20%);
@@ -247,7 +231,7 @@ body::before{
 .col-left{padding:0}
 .col-right{padding:0}
 
-/* ---------- tabs ---------- */
+/* Tabs */
 .tabs{display:flex;flex:0 0 auto;border-bottom:1px solid var(--rule);height:52px}
 .tab{
   flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
@@ -269,7 +253,7 @@ body::before{
 
 .panel-scroll{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;padding:14px}
 
-/* ---------- section heads ---------- */
+/* Section Headers */
 .sec-h{
   display:flex;align-items:baseline;justify-content:space-between;gap:10px;
   padding-bottom:9px;margin-bottom:12px;border-bottom:1px solid var(--rule);
@@ -277,7 +261,7 @@ body::before{
 .sec-h h4{color:var(--faint)}
 .sec-h .sub{font-family:var(--mono);font-size:10px;color:var(--ghost)}
 
-/* ---------- cards (right column) ---------- */
+/* Cards */
 .card{display:flex;flex-direction:column;min-height:0;border-bottom:1px solid var(--rule);overflow:hidden}
 .card-h{
   display:flex;align-items:center;justify-content:space-between;gap:8px;
@@ -294,9 +278,7 @@ body::before{
   font-size:10.5px;color:var(--ghost);padding:10px 14px;line-height:1.6;border-top:1px solid var(--rule);
 }
 
-/* ============================================================
-   BUY-AMOUNT SEGMENTED CONTROL
-   ============================================================ */
+/* Controls */
 .segmented{display:flex;border:1px solid var(--rule);border-radius:var(--r);margin-bottom:14px;overflow:hidden}
 .segmented .btn{
   flex:1;border:0;border-right:1px solid var(--rule);border-radius:0;
@@ -308,9 +290,7 @@ body::before{
 .segmented .btn:hover{color:var(--dim);background:var(--surface)}
 .segmented .btn.on{color:var(--accent);background:var(--accent-soft)}
 
-/* ============================================================
-   COLONY ROWS
-   ============================================================ */
+/* Colonies */
 .colony{
   border:1px solid var(--rule);border-radius:var(--r);margin-bottom:9px;
   background:var(--surface);transition:border-color .25s var(--ease),background .25s;
@@ -368,7 +348,7 @@ body::before{
 .emptyslot:hover{border-color:var(--accent-line);color:var(--dim);background:var(--surface)}
 .emptyslot b{display:block;color:var(--ink);margin-bottom:5px;font-weight:500;font-size:12.5px;letter-spacing:.02em}
 
-/* ---------- species picker ---------- */
+/* Species Picker */
 .picker{border:1px solid var(--rule);border-radius:var(--r);margin-bottom:10px;animation:rowIn .3s var(--ease)}
 .pickgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:1px;background:var(--rule)}
 .pick{
@@ -391,9 +371,7 @@ body::before{
 }
 .pick .plock .ico{width:9px;height:9px}
 
-/* ============================================================
-   EVOLUTION CHAINS
-   ============================================================ */
+/* Evolution */
 .evo-fam{border:1px solid var(--rule);border-radius:var(--r);margin-bottom:10px;overflow:hidden}
 .evo-h{display:flex;align-items:center;gap:9px;padding:10px 12px;border-bottom:1px solid var(--rule)}
 .evo-h .nm{font-size:12.5px;font-weight:500;flex:1;letter-spacing:.02em}
@@ -423,9 +401,7 @@ body::before{
 .evo-pass b{color:var(--dim);font-weight:500}
 .mythic{color:var(--dna) !important}
 
-/* ============================================================
-   ROOM ROWS
-   ============================================================ */
+/* Rooms */
 .urow{
   display:flex;gap:12px;align-items:center;padding:11px 12px;margin-bottom:1px;
   border:1px solid var(--rule);border-radius:var(--r);transition:.25s var(--ease);
@@ -442,9 +418,7 @@ body::before{
 .urow .btn{flex:0 0 auto;min-width:82px;flex-direction:column;gap:2px}
 .urow.maxed{opacity:.45}
 
-/* ============================================================
-   GENOME
-   ============================================================ */
+/* Genome */
 .genome-head{
   border:1px solid rgba(255,134,200,.22);border-radius:var(--r);padding:16px;margin-bottom:16px;
   background:linear-gradient(180deg,rgba(255,134,200,.05),transparent);
@@ -477,9 +451,7 @@ body::before{
 .gnode.max::after{background:rgba(232,181,99,.5)}
 .gnode.locked{opacity:.3;cursor:not-allowed}
 
-/* ============================================================
-   CODEX
-   ============================================================ */
+/* Codex */
 .codex-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:1px;background:var(--rule);margin-bottom:6px}
 .cx{background:var(--void);padding:8px 3px 7px;text-align:center;transition:background .2s var(--ease)}
 .cx:hover{background:var(--surface-2)}
@@ -502,9 +474,7 @@ body::before{
 .ach .ar{font-size:9.5px;color:var(--faint);font-family:var(--mono);text-align:right;flex:0 0 auto}
 .ach.done .ar{color:var(--accent)}
 
-/* ============================================================
-   CENTRE — depth bar / stage / raid bar / abilities
-   ============================================================ */
+/* Stage */
 .depthbar{
   display:flex;align-items:center;justify-content:space-between;gap:12px;flex:0 0 auto;
   padding-bottom:11px;border-bottom:1px solid var(--rule);
@@ -520,7 +490,7 @@ body::before{
 .depth-wave b{color:var(--dim);font-weight:500}
 .depth-right{display:flex;gap:5px}
 
-/* ---------- objective: the always-on teaching line ---------- */
+/* Objective */
 .objective{
   display:flex;gap:13px;align-items:flex-start;flex:0 0 auto;
   padding:11px 14px;border:1px solid var(--rule-2);border-radius:var(--r);
@@ -587,7 +557,7 @@ body::before{
   margin-top:11px;font-weight:500;text-transform:uppercase;text-indent:.22em;
 }
 
-/* ---------- raid bar ---------- */
+/* Raid Bar */
 .wavebar{display:flex;gap:10px;align-items:stretch;flex:0 0 auto;height:38px}
 .wb-track{
   flex:1 1 auto;border:1px solid var(--rule);border-radius:var(--r);
@@ -610,7 +580,7 @@ body::before{
 }
 .wavebar .btn{min-width:132px}
 
-/* ---------- abilities ---------- */
+/* Abilities */
 .abilities{display:flex;gap:6px;flex:0 0 auto}
 .abil{
   position:relative;flex:1 1 0;min-width:0;overflow:hidden;
@@ -632,9 +602,7 @@ body::before{
 .abil.cd{opacity:.75}
 .abil.lockedab{opacity:.3;pointer-events:none}
 
-/* ============================================================
-   RIGHT COLUMN
-   ============================================================ */
+/* Stats & Logs */
 .eco-card,.adapt-card{flex:0 0 auto}
 .eco-body{padding:4px 14px 13px}
 .pyramid{display:flex;flex-direction:column;gap:5px;margin-bottom:13px}
@@ -693,9 +661,7 @@ body::before{
 .log .g{color:var(--bio)} .log .r{color:var(--danger)} .log .p{color:var(--ess)}
 .log .y{color:var(--gold)} .log .m{color:var(--dna)}
 
-/* ============================================================
-   PROGRESSIVE DISCLOSURE
-   ============================================================ */
+/* Progressive disclosure */
 .veiled{display:none !important}
 .unveil{animation:unveil 1s var(--ease) both}
 @keyframes unveil{
@@ -750,9 +716,7 @@ body::before{
 }
 .dimmer.on{opacity:1;pointer-events:auto;cursor:pointer}
 
-/* ============================================================
-   TOASTS
-   ============================================================ */
+/* Toasts */
 .toasts{
   position:fixed;right:16px;bottom:16px;z-index:50;pointer-events:none;
   display:flex;flex-direction:column;gap:7px;max-width:330px;
@@ -773,9 +737,7 @@ body::before{
 .toast.unlock{border-color:rgba(176,154,255,.4)} .toast.unlock .ti{color:var(--ess)}
 .toast.ach{border-color:rgba(232,181,99,.4)} .toast.ach .ti{color:var(--gold)}
 
-/* ============================================================
-   MODAL
-   ============================================================ */
+/* Modal */
 .modal-bg{
   position:fixed;inset:0;z-index:80;display:grid;place-items:center;padding:20px;
   background:rgba(3,4,6,.86);animation:fadeIn .25s var(--ease);
@@ -823,7 +785,7 @@ textarea.savebox{
 .step .sb h4{font-size:11px;letter-spacing:.16em;text-transform:uppercase;margin-bottom:5px;font-weight:600}
 .step .sb p{font-size:12px;margin:0;color:var(--dim)}
 
-/* ---------- system banner: storage blocked, recoverable error ---------- */
+/* System Banner */
 .sysbanner{
   position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:95;
   display:flex;gap:14px;align-items:flex-start;max-width:min(560px,92vw);
@@ -839,9 +801,7 @@ textarea.savebox{
 .sysbanner .sb-x{flex:0 0 auto;color:var(--faint);font-size:14px;line-height:1;padding:2px 4px}
 .sysbanner .sb-x:hover{color:var(--ink)}
 
-/* ============================================================
-   TOOLTIP
-   ============================================================ */
+/* Tooltip */
 .tooltip{
   position:fixed;z-index:90;pointer-events:none;max-width:268px;
   border:1px solid var(--rule-2);border-radius:var(--r);padding:10px 12px;
@@ -856,17 +816,13 @@ textarea.savebox{
   letter-spacing:.08em;text-transform:uppercase;
 }
 
-/* ============================================================
-   RESPONSIVE
-   ============================================================ */
+/* Responsive */
 @media (max-width:1220px){
   .layout{grid-template-columns:minmax(280px,30%) 1fr}
   .col-right{
     grid-column:1 / -1;flex-direction:row;overflow-x:auto;overflow-y:hidden;
     max-height:232px;border-top:1px solid var(--rule);
   }
-  /* each card owns its own scroll — squashed cards used to spill their
-     content over the neighbouring card's header */
   .col-right .card{flex:1 0 268px;border-right:1px solid var(--rule);border-bottom:0;overflow:hidden}
   .col-right .card-h{flex:0 0 auto}
   .col-right .eco-body,
@@ -893,20 +849,13 @@ textarea.savebox{
   *,*::before,*::after{animation-duration:.01ms !important;transition-duration:.01ms !important}
 }
 
-/* ============================================================
-   LIVE WEBGL BACKDROP
-   A domain-warped membrane renders behind everything. Once it is
-   running the chrome goes translucent so the room shows through —
-   the interface floats inside the dungeon rather than covering it.
-   Without WebGL2 nothing here applies and the solid theme stands.
-   ============================================================ */
+/* WebGL backdrop */
 #bgfx{
   position:fixed;inset:0;width:100vw;height:100vh;display:block;
   z-index:-2;pointer-events:none;
 }
 body.has-gl{background:transparent}
 body.has-gl::before{
-  /* keep a soft floor under the text so the shader never hurts legibility */
   background:
     radial-gradient(ellipse 120% 90% at 50% 45%,transparent 35%,rgba(0,0,0,.62) 100%),
     linear-gradient(180deg,rgba(6,7,10,.55),rgba(6,7,10,.30) 30%,rgba(6,7,10,.55));
@@ -948,5 +897,4 @@ body.has-gl .decree,
 body.has-gl .toast,
 body.has-gl .tooltip{backdrop-filter:blur(18px) saturate(1.15);-webkit-backdrop-filter:blur(18px) saturate(1.15)}
 
-/* the cold open sits directly on the shader */
 body.has-gl #bootCanvas{opacity:.55}

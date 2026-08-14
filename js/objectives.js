@@ -1,9 +1,3 @@
-/* ============================================================
-   objectives.js — the teaching spine
-   One goal on screen at a time, from the first button to the
-   endgame. Each says what to do, and why it matters. Nothing is
-   ever explained twice and nothing is explained early.
-   ============================================================ */
 (function (global) {
   'use strict';
   const D = global.DATA, G = global.G, S = global.S, ECO = global.ECO;
@@ -14,11 +8,6 @@
   const maxStage = () => G.colonies.reduce((a, c) => Math.max(a, c.stage), 0);
   const maxAdapt = () => Math.max.apply(null, D.TYPE_LIST.map(t => G.adapt[t] || 0));
 
-  /* goal   — the imperative, what to do right now
-     why    — the mechanic, in plain words
-     done   — completion test
-     at     — optional live progress "3 / 5"
-     look   — optional pointer at where in the UI to look           */
   const LIST = [
     {
       id: 'open', goal: 'Open the gates',
@@ -198,11 +187,9 @@
 
   let lastId = null, flashT = 0;
 
-  /** called once a second; returns the objective that was just completed, if any */
   function check() {
     G.objDone = G.objDone || {};
     let completed = null;
-    // allow skipping ahead: anything already satisfied counts, in order
     for (let guard = 0; guard < LIST.length; guard++) {
       const o = current();
       if (G.objDone[o.id]) break;
@@ -215,7 +202,6 @@
     return completed;
   }
 
-  /* ---------------- rendering ---------------- */
   function render() {
     const box = document.getElementById('objective');
     if (!box) return;

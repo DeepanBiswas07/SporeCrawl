@@ -1,13 +1,9 @@
-/* ============================================================
-   combat.js — raid generation, real-time auto-battle, rewards,
-   hero adaptation. Heroes learn what killed them.
-   ============================================================ */
 (function (global) {
   'use strict';
   const D = global.DATA, C = D.CONF, G = global.G, S = global.S, ECO = global.ECO;
 
   const B = {
-    phase: 'idle',      // idle | fight | won | lost
+    phase: 'idle',
     heroes: [],
     timer: 0,
     raidTime: 0,
@@ -24,9 +20,6 @@
   };
   global.BATTLE = B;
 
-  /* -------------------- layout -------------------- */
-  // three ragged columns of monsters facing two columns of heroes, with the
-  // killing corridor left open in the middle for projectiles to cross
   const MSLOT = [];
   for (let i = 0; i < 18; i++) {
     const col = i % 3, row = Math.floor(i / 3);
@@ -38,22 +31,18 @@
     HSLOT.push({ x: 0.885 - col * 0.095, y: 0.32 + row * 0.125 });
   }
 
-  /* -------------------- hero party generation -------------------- */
   function availableClasses(gw) {
     const pool = D.HEROES.filter(h => gw >= h.minWave);
     return pool.length ? pool : [D.HEROES[0]];
   }
   function pickClass(gw) {
     const pool = availableClasses(gw);
-    // bias strongly toward the newest tiers
     const maxTier = pool.reduce((a, h) => Math.max(a, h.tier), 1);
     const doc = G.doctrine;
     const weighted = [];
     for (const h of pool) {
       let w = Math.pow(2.1, h.tier - maxTier) * 10;
       if (h.tier === maxTier) w *= 2.2;
-      // Doctrine: once they have learned what kills them, the villages start
-      // sending the specialists. Spam poison and Wardens start showing up.
       if (doc && (h.res[doc] || 0) >= 0.3) w *= 3.2;
       weighted.push([h, w]);
     }
@@ -104,7 +93,6 @@
       const key = L.name;
       const grudge = G.discovered.legend[key] || 0;
       const title = D.LEGEND_TITLES[Math.min(grudge, D.LEGEND_TITLES.length - 1)];
-      // the legend adapts automatically to whatever has been killing it
       let top = 'phys', tv = -1;
       for (const t of D.TYPE_LIST) if ((G.dmgDealt[t] || 0) > tv) { tv = G.dmgDealt[t]; top = t; }
       const cls = availableClasses(gw).slice(-4)[0] || D.HEROES[0];
@@ -134,7 +122,6 @@
     return heroes;
   }
 
-  /* -------------------- battle lifecycle -------------------- */
   function livingColonies() { return G.colonies.filter(c => c.alive); }
   function battleLine() {
     return G.colonies.slice(0, G.mult.battleSlots);
@@ -143,8 +130,6 @@
   function startRaid(manual) {
     if (B.phase === 'fight') return;
     if (!G.colonies.length) {
-      // the very first raid is meant to be walked in on with an empty dungeon;
-      // after that, stop nagging every few seconds
       B.gap = 4;
       if (manual) global.UI && UI.toast('lock', 'Nothing lives here', 'Found a colony first.');
       if (G.stats.raidsWon + G.stats.raidsLost > 0) return;
@@ -169,7 +154,6 @@
     B.devoured = false;
     B.routed = 0;
 
-    // opening traps
     const open = G.mult.trapOpen;
     for (const h of B.heroes) {
       if (open > 0) h.hp *= (1 - open);
@@ -184,7 +168,6 @@
     global.UI && UI.refreshRaidBtn();
   }
 
-  /* -------------------- damage -------------------- */
   function heroResist(h, type) {
     let r = (h.res[type] || 0) + (G.adapt[type] || 0) * C.adaptResist * G.mult.adaptBite;
     r -= G.mult.rend;
@@ -213,7 +196,6 @@
 
   function killHero(h, src) {
     if (!h.alive) return;
-    // Saint / legend resurrection
     if (h.ability === 'revive' && !h.revived) {
       h.revived = true; h.hp = h.maxHp * 0.45; h.shield = h.maxHp * 0.15;
       if (global.FX) FX.ring(h.x, h.y - 0.05, '#fff6d6');
@@ -226,7 +208,6 @@
     if (global.FX) FX.death(h.x, h.y - 0.06, h.color, h.legend);
     global.SFX.heroDie();
 
-    // ---- loot ----
     const gw = S.globalWave();
     const ru = D.rewardUnit(gw);
     let mulL = 1;
@@ -253,7 +234,6 @@
 
   function damageColony(col, amount, hero) {
     if (!col.alive) return;
-    // Bulwark redirect
     let amt = amount;
     const guard = G.colonies.find(c => c.alive && D.FAM_BY_ID[c.fam].passive === 'bulwark' && c !== col);
     if (guard) {
@@ -263,7 +243,6 @@
       guard.hp -= redirected; guard.hitT = 0.14;
       if (guard.hp <= 0) routColony(guard);
     }
-    // Phase dodge
     const f = D.FAM_BY_ID[col.fam];
     if (f.passive === 'phase' && Math.random() < f.passiveVal / 100) {
       if (global.FX) FX.text(col.x, col.y - 0.08, 'phase', '#b06cff');
@@ -277,24 +256,18 @@
 
   function routColony(col) {
     const f = D.FAM_BY_ID[col.fam];
-    // A routed colony is out for the rest of the raid. Nothing comes back
-    // mid-fight — otherwise a staggered respawn cycle means the core never
-    // drains and any raid can be ground out regardless of power.
     col.alive = false;
     col.routedAt = B.raidTime;
     if (global.FX) FX.death(col.x, col.y - 0.05, f.colors[0]);
     global.SFX.monsterDie();
   }
 
-  /* -------------------- per-frame update -------------------- */
   function update(dt) {
     if (B.phase !== 'fight') return;
     B.raidTime += dt;
     const line = battleLine();
     const livingH = B.heroes.filter(h => h.alive);
 
-    /* ---- hero movement / entry ---- */
-    // acid vents chew on the party at a rate set by your own ecosystem
     const ventDps = G.mult.trapDot > 0 && livingH.length
       ? ECO.dungeonDPS() * G.mult.trapDot / livingH.length : 0;
     let allIn = true;
@@ -315,11 +288,9 @@
         h.burn -= dt;
         damageHero(h, h.burnDps * dt, 'fire', 'burn');
       }
-      // acid vents
       if (ventDps > 0) damageHero(h, ventDps * dt, 'pois', 'trap');
     }
 
-    /* ---- sustain: healing, not resurrection ---- */
     let regen = G.mult.regen;
     for (const c of G.colonies) {
       const f = D.FAM_BY_ID[c.fam];
@@ -333,7 +304,6 @@
       if (regen > 0 && c.hp < c.maxHp) c.hp = Math.min(c.maxHp, c.hp + c.maxHp * regen * dt);
     }
 
-    /* ---- colony attacks ---- */
     const frenzy = G.buffs.frenzy > 0 ? 2.3 : 1;
     const killBonus = 1 + B.killsThisRaid * (G.mult.frenzyPerKill + G.mult.spiralPerKill);
     const webSlow = G.colonies.some(c => c.alive && D.FAM_BY_ID[c.fam].passive === 'web')
@@ -353,11 +323,9 @@
         c.strikes++;
         const targets = B.heroes.filter(h => h.alive);
         if (!targets.length) break;
-        // pick target: front-most (largest x is deepest in dungeon => nearest is smallest x)
         let tgt = targets[0];
         for (const h of targets) if (h.x < tgt.x) tgt = h;
         if (f.passive === 'devour') {
-          // prefer wounded
           let best = tgt, bv = Infinity;
           for (const h of targets) { const v = h.hp / h.maxHp; if (v < bv) { bv = v; best = h; } }
           tgt = best;
@@ -371,7 +339,6 @@
         if (f.passive === 'mob') dmg *= 1 + (livingColonies().length - 1) * f.passiveVal / 100;
         if (f.passive === 'split') dmg *= 1 + (B.routed || 0) * f.passiveVal / 100;
 
-        // Mimicry: part of every strike lands as whatever they are least ready for
         let dtype = f.dmg;
         if (G.mult.mimic > 0 && G.eco.leastAdapted && Math.random() < G.mult.mimic) {
           dtype = G.eco.leastAdapted;
@@ -380,7 +347,6 @@
         const dealt = damageHero(tgt, dmg, dtype, c, opt);
         if (crit) global.SFX.crit(); else global.SFX.hit();
 
-        // passives
         if (f.passive === 'lifesteal' && c.alive) c.hp = Math.min(c.maxHp, c.hp + dealt * f.passiveVal / 100);
         if (f.passive === 'burn' && tgt.alive) { tgt.burn = 3; tgt.burnDps = dealt * (f.passiveVal / 100) / 3; }
         if (f.passive === 'freeze' && tgt.alive && Math.random() < f.passiveVal / 100) {
@@ -397,7 +363,6 @@
       }
     }
 
-    /* ---- hero attacks ---- */
     const aliveCols = line.filter(c => c.alive);
     for (const h of B.heroes) {
       if (!h.alive || h.entering || h.frozen > 0) continue;
@@ -406,7 +371,6 @@
       if (h.auraT > 0) spd *= 1.15;
       h.atkT += dt * spd;
 
-      // hero special abilities
       h.abilT -= dt;
       if (h.abilT <= 0 && h.ability) { heroAbility(h); h.abilT = U.rand(6, 11); }
 
@@ -434,10 +398,8 @@
       }
     }
 
-    /* ---- resolution ---- */
     if (!B.heroes.some(h => h.alive)) { winRaid(); return; }
     if (!G.colonies.some(c => c.alive)) {
-      // the line has broken — heroes reach the core
       B.core -= dt * 0.85;
       if (global.FX) FX.coreBreach();
       if (B.core <= 0) { loseRaid(); return; }
@@ -475,11 +437,6 @@
     }
   }
 
-  /* -------------------- win / lose -------------------- */
-  /* Heroes learn from CONCENTRATION, not from volume. A type that did all of
-     your damage teaches them a lot; six types doing a sixth each teach them
-     almost nothing, because share^1.7 collapses fast. This is what replaces
-     the old free Purge button — the answer to adaptation is composition. */
   function updateAdaptation() {
     let tot = 0;
     for (const t of D.TYPE_LIST) tot += B.dmgThisRaid[t] || 0;
@@ -494,7 +451,6 @@
         G.adapt[t] = Math.max(0, (G.adapt[t] || 0) - C.adaptDecay * G.mult.adaptDecay);
       }
     }
-    // whatever they have most armour against defines who they send next
     let top = null, tv = 0;
     for (const t of D.TYPE_LIST) if ((G.adapt[t] || 0) > tv) { tv = G.adapt[t]; top = t; }
     G.doctrine = tv >= C.doctrineAt ? top : null;
@@ -517,7 +473,6 @@
       '<span class="p">' + U.fmt(B.loot.ess) + ' essence</span>, ' +
       '<span class="y">' + U.fmt(B.loot.gold) + ' plunder</span>.');
 
-    // advance
     const biome = S.biome();
     if (G.wave >= biome.waves && G.depth < D.BIOMES.length) {
       G.depth++; G.wave = 1;
@@ -549,7 +504,6 @@
     global.UI && UI.afterRaid();
   }
 
-  /* -------------------- abilities -------------------- */
   function useAbility(id) {
     const a = D.ABILITIES.find(x => x.id === id);
     if (!a) return false;
@@ -573,7 +527,6 @@
         B.heroes.forEach(h => { if (h.alive) { h.burn = a.dur; h.burnDps = h.maxHp * 0.045; } });
         if (global.FX) FX.wave(0.6, 0.5, '#8de84f'); break;
       case 'devour': {
-        // an unconditional kill has to be rationed, or it beats every health bar in the game
         if (B.devoured) { G.abil[id] = 0; global.SFX.error(); global.UI && UI.toast('devour', 'Still digesting', 'One Devour per raid.'); return false; }
         const alive = B.heroes.filter(h => h.alive && !h.legend);
         if (!alive.length) { G.abil[id] = 0; global.SFX.error(); return false; }

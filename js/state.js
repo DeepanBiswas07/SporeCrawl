@@ -1,6 +1,3 @@
-/* ============================================================
-   state.js — game state, derived multipliers, save / load
-   ============================================================ */
 (function (global) {
   'use strict';
   const D = global.DATA, C = D.CONF;
@@ -8,9 +5,6 @@
   const SAVE_KEY = 'sporecrawl-save-v1';
   const LEGACY_KEYS = ['dungeon-ecosystem-save-v1'];
 
-  /* The game was called Dungeon Ecosystem before release. Anyone who played it
-     under the old name keeps their dungeon: on first run we adopt the old save
-     into the new key and leave the original untouched as a backup. */
   (function migrate() {
     try {
       if (global.Store.getItem(SAVE_KEY)) return;
@@ -18,7 +12,7 @@
         const raw = global.Store.getItem(old);
         if (raw) { global.Store.setItem(SAVE_KEY, raw); break; }
       }
-    } catch (e) { /* a failed migration must never block boot */ }
+    } catch (e) { }
   })();
 
   function freshState() {
@@ -38,8 +32,8 @@
       maxDepth: 1,
       bestInBiome: {},
       autoRaid: true,
-      abil: {},          // id -> cooldown remaining
-      buffs: {},         // id -> seconds remaining
+      abil: {},
+      buffs: {},
       stats: {
         kills: 0, legendKills: 0, evolutions: 0, bestWave: 0, bestBiome: 1,
         collapses: 0, rebirths: 0, mutLevels: 0, starved: 0, streak: 0,
@@ -56,16 +50,15 @@
       lastTick: Date.now(),
       startedAt: Date.now(),
       unlockSeen: {},
-      doctrine: null,       // the type the hero roster is currently built to resist
-      revealed: {},         // progressive-disclosure steps already fired
-      objDone: {}           // teaching objectives already completed
+      doctrine: null,
+      revealed: {},
+      objDone: {}
     };
   }
 
   const G = freshState();
   global.G = G;
 
-  /* ---------------- helpers ---------------- */
   const roomLvl = id => G.rooms[id] || 0;
   const mutLvl = id => G.muts[id] || 0;
   function mutVal(id) {
@@ -79,7 +72,6 @@
   }
   function biome() { return D.BIOMES[G.depth - 1]; }
 
-  /* ---------------- room cost ---------------- */
   function roomCost(room, lvl) {
     lvl = lvl == null ? roomLvl(room.id) : lvl;
     return room.cost * Math.pow(room.growth, lvl) * mutVal('sprawl');
@@ -89,13 +81,11 @@
     if (!n || n === 1) return Math.ceil(m.cost * Math.pow(m.g, lvl));
     return Math.ceil(U.geoSum(m.cost, m.g, lvl, n));
   }
-  /** how many levels of a mutation the current genome can buy */
   function mutMaxBuy(m) {
     const lvl = mutLvl(m.id);
     return Math.min(m.max - lvl, U.geoMaxBuy(m.cost, m.g, lvl, G.res.dna));
   }
 
-  /* ---------------- colony costs ---------------- */
   function popCost(col, n) {
     const f = D.FAM_BY_ID[col.fam];
     n = n || 1;
@@ -116,14 +106,12 @@
     return fam.foundCost * G.mult.popCost;
   }
 
-  /* ---------------- achievements multiplier ---------------- */
   function achMult() {
     let m = 1;
     for (const a of D.ACHIEVEMENTS) if (G.ach[a.id]) m *= a.rew;
     return m;
   }
 
-  /* ---------------- recalc all derived multipliers ---------------- */
   function recalc() {
     const m = G.mult;
     const rebirth = Math.pow(1.9, G.res.cell) * (1 + G.stats.rebirths * 0.25);
@@ -136,7 +124,6 @@
     m.ach = achMult();
     m.global = m.ach * gaia * primal * rebirth;
 
-    // --- combat ---
     m.atk = m.global
       * mutVal('fang')
       * extinct
@@ -154,19 +141,16 @@
     m.convergent = mutVal('converge') / 100;
     m.counterBonus = mutVal('counter') / 100;
 
-    // --- resources ---
     const gainBase = m.global * bloom;
     m.bio = gainBase * mutVal('division') * (1 + roomLvl('sluice') * 0.11);
     m.ess = gainBase * mutVal('digest') * (1 + roomLvl('still') * 0.10);
     m.gold = gainBase * mutVal('plunder') * (1 + roomLvl('vault') * 0.12);
     m.passive = mutVal('metab') * (1 + roomLvl('garden') * 0.0);
 
-    // --- costs ---
     m.popCost = mutVal('fertile') * Math.pow(0.978, roomLvl('vats'));
     m.geneCost = mutVal('cheapmeat') * Math.pow(0.980, roomLvl('forge'));
     m.evoCost = Math.pow(0.972, roomLvl('chamber'));
 
-    // --- ecosystem ---
     m.prodOut = mutVal('cycle') * (1 + roomLvl('garden') * 0.14);
     m.decompOut = mutVal('cycle') * (1 + roomLvl('bonepit') * 0.15);
     m.foodSupply = 1 + roomLvl('troughs') * 0.09;
@@ -178,7 +162,6 @@
     m.popExp = C.popExp + mutVal('hyper');
     m.capacity = Math.floor((30 + roomLvl('warren') * 12 + mutVal('brood')) * 1);
 
-    // --- dungeon ---
     m.slots = 3 + roomLvl('pool') + mutVal('deeper');
     m.battleSlots = C.battleSlots + mutVal('warlord');
     m.coreHP = C.coreHP + roomLvl('core') + mutVal('heart');
@@ -186,34 +169,21 @@
     m.legendBonus = mutVal('grudge');
     m.raidSize = 1 + roomLvl('lure') * 0.04;
 
-    // --- adaptation ---
     m.adaptGain = mutVal('shift');
     m.adaptDecay = mutVal('immune');
     m.adaptCap = Math.min(mutVal('antigen'), mutVal('unknow')) / 100;
-    // Adaptation still accumulates from raid 1, but it does not start BITING
-    // until the player can plausibly answer it (a second species costs biomass
-    // they do not have at raid 5). Ramps in over raids 12–42, which is exactly
-    // when the mechanic gets explained.
     m.adaptBite = U.clamp((G.stats.bestWave - 12) / 30, 0, 1);
 
-    // --- traps ---
-    // traps are capped percentages, or scale off your own DPS — never off hero max HP,
-    // which would make them stronger the deeper you go
     m.trapOpen = Math.min(0.40, roomLvl('spikes') * 0.0028);
     m.trapDot = roomLvl('vents') * 0.015;
     m.crushChance = Math.min(0.25, roomLvl('ceiling') * 0.004);
 
-    // --- time ---
-    // The first hour is where every mechanic gets introduced, and a raid every
-    // 3 seconds leaves no room to read any of it. Raids start ~3x slower and
-    // tighten up as the player stops needing to think about each one.
     const settling = U.clamp(3.0 - G.stats.bestWave / 18, 1, 3);
     m.raidGap = C.raidGapBase * settling * Math.max(0.08, 1 - roomLvl('sonar') * 0.034) / mutVal('echo');
-    // floored: an instant-kill ability on a 4-second cooldown trivialises every scale
     m.abilityCd = Math.max(0.35, mutVal('rift'));
     m.mimic = mutVal('mimic') / 100;
     m.speed = mutVal('sing');
-    m.regen = roomLvl('hatch') * 0.005;   // fraction of max health per second
+    m.regen = roomLvl('hatch') * 0.005;
     m.offlineCap = C.offlineCapBase + (mutVal('slumber') + roomLvl('crypt')) * 3600;
     m.offlineEff = mutVal('memory');
     m.hungerLeak = mutVal('hunger') / 100;
@@ -221,7 +191,6 @@
     return m;
   }
 
-  /* ---------------- save / load ---------------- */
   function serialize() {
     const s = {
       ver: G.ver, res: G.res, colonies: G.colonies.map(c => ({ f: c.fam, s: c.stage, p: c.pop, g: c.gene, a: c.auto ? 1 : 0 })),
@@ -269,7 +238,6 @@
       if (!raw) return false;
       return applySave(JSON.parse(raw));
     } catch (e) {
-      // a corrupt save must never brick the game — keep a copy and start clean
       global.Guard.report(e, 'load');
       try { global.Store.setItem(SAVE_KEY + '-corrupt', global.Store.getItem(SAVE_KEY) || ''); } catch (e2) { }
       global.Store.removeItem(SAVE_KEY);
@@ -291,19 +259,15 @@
     } catch (e) { return false; }
   }
 
-  /* ---------------- colony factory ---------------- */
   function makeColony(famId, stage, pop, gene) {
-    const f = D.FAM_BY_ID[famId];
     return {
       fam: famId, stage: stage || 0, pop: pop || 1, gene: gene || 0,
-      // battle-only fields
       hp: 1, maxHp: 1, alive: true, atkT: 0, buff: 0,
       shield: 0, freezeGlow: 0, flash: 0, x: 0, y: 0, hitT: 0,
       strikes: 0, id: famId + '_' + (Math.random() * 1e9 | 0)
     };
   }
 
-  /* ---------------- prestige math ---------------- */
   function dnaGain() {
     const best = G.stats.bestWaveRun || 0;
     if (best < C.dnaMinWave) return 0;
@@ -312,8 +276,6 @@
   }
   function canCollapse() { return dnaGain() >= 1; }
 
-  /** Cells are a function of total lifetime depth, not of any single run,
-      so a Rebirth is worth taking exactly when the target has moved. */
   function cellTarget() {
     const best = G.stats.bestWave || 0;
     if (best < C.cellStart) return 0;

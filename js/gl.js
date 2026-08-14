@@ -1,15 +1,3 @@
-/* ============================================================
-   gl.js — raw WebGL2. No libraries, no build step.
-
-   Two things:
-     Backdrop — a living, domain-warped membrane rendered behind the
-                entire interface. You are inside something alive.
-     Bloom    — a real post-process pass over the battle canvas:
-                bright-pass, separable blur, additive composite,
-                plus chromatic aberration that kicks on impact.
-
-   Everything degrades to "do nothing" if WebGL2 is unavailable.
-   ============================================================ */
 (function (global) {
   'use strict';
 
@@ -19,7 +7,6 @@ const vec2 P[3] = vec2[3](vec2(-1.,-1.), vec2(3.,-1.), vec2(-1.,3.));
 out vec2 vUv;
 void main(){ vec2 p = P[gl_VertexID]; vUv = p*0.5+0.5; gl_Position = vec4(p,0.,1.); }`;
 
-  /* ---------------- the living backdrop ---------------- */
   const BACKDROP_FS = `#version 300 es
 precision highp float;
 in vec2 vUv;
@@ -27,9 +14,9 @@ out vec4 outColor;
 uniform vec2  uRes;
 uniform float uTime;
 uniform vec3  uAccent;
-uniform float uHeat;    // 0..1 how violent the current raid is
-uniform float uPulse;   // 0..1 core damage flash
-uniform float uDepth;   // 0..1 how deep the player is
+uniform float uHeat;
+uniform float uPulse;
+uniform float uDepth;
 
 float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123); }
 float noise(vec2 p){
@@ -38,12 +25,12 @@ float noise(vec2 p){
   return mix(mix(hash(i), hash(i+vec2(1,0)), f.x),
              mix(hash(i+vec2(0,1)), hash(i+vec2(1,1)), f.x), f.y);
 }
-float fbm3(vec2 p){            // cheap, for domain warping
+float fbm3(vec2 p){
   float a = 0.5, s = 0.0;
   for(int i=0;i<3;i++){ s += a*noise(p); p *= 2.03; a *= 0.5; }
   return s;
 }
-float fbm(vec2 p){             // full detail, for the visible field
+float fbm(vec2 p){
   float a = 0.5, s = 0.0;
   for(int i=0;i<5;i++){ s += a*noise(p); p *= 2.03; a *= 0.5; }
   return s;
@@ -53,37 +40,30 @@ void main(){
   vec2 p = (gl_FragCoord.xy - 0.5*uRes) / uRes.y;
   float t = uTime * 0.045;
 
-  // two rounds of domain warping — this is what makes it read as tissue
-  // rather than as a noise texture
   vec2 q = vec2(fbm3(p*1.5 + vec2(0.0, t)),
                 fbm3(p*1.5 + vec2(5.2, 1.3) - t*0.7));
   vec2 r = vec2(fbm3(p*1.8 + 3.0*q + vec2(1.7, 9.2) + t*0.55),
                 fbm3(p*1.8 + 3.0*q + vec2(8.3, 2.8) - t*0.42));
   float f = fbm(p*1.35 + 3.1*r);
 
-  // ridged veins running through the mass
   float veins = pow(abs(sin(f*8.8 + t*2.4)), 7.0);
-  // slow breathing
   float breathe = 0.82 + 0.18*sin(uTime*0.30);
 
   vec3 base = mix(vec3(0.021,0.025,0.032), vec3(0.030,0.020,0.038), uDepth);
   vec3 col  = base;
   col += uAccent * (f*f*0.15 + veins*0.11*(0.45 + uHeat*0.9)) * breathe;
 
-  // a soft light source low-left, where the dungeon core sits
   vec2 core = p - vec2(-0.62, -0.10);
   col += uAccent * pow(max(0.0, 1.0 - length(core)*1.05), 3.0) * (0.055 + uHeat*0.05);
 
-  // the room goes arterial when the core is being hit
   col = mix(col, vec3(0.42,0.05,0.09), uPulse*0.55*smoothstep(0.15,1.15,length(p)));
 
-  col *= 1.0 - 0.58*smoothstep(0.30, 1.30, length(p));       // vignette
-  col += (hash(gl_FragCoord.xy + fract(uTime)*137.0)-0.5)*0.013; // grain
+  col *= 1.0 - 0.58*smoothstep(0.30, 1.30, length(p));
+  col += (hash(gl_FragCoord.xy + fract(uTime)*137.0)-0.5)*0.013;
 
   outColor = vec4(max(col, 0.0), 1.0);
 }`;
 
-  /* ---------------- post-process ---------------- */
   const BRIGHT_FS = `#version 300 es
 precision highp float;
 in vec2 vUv; out vec4 outColor;
@@ -101,7 +81,6 @@ in vec2 vUv; out vec4 outColor;
 uniform sampler2D uTex; uniform vec2 uDir; uniform vec2 uRes;
 void main(){
   vec2 px = uDir / uRes;
-  // 9-tap gaussian
   vec3 s = texture(uTex, vUv).rgb * 0.2270270270;
   s += texture(uTex, vUv + px*1.3846153846).rgb * 0.3162162162;
   s += texture(uTex, vUv - px*1.3846153846).rgb * 0.3162162162;
@@ -121,13 +100,11 @@ void main(){
   vec2 uv = vUv;
   vec2 c  = uv - 0.5;
 
-  // shock ripple on heavy impacts
   if (uShock > 0.001) {
     float d = length(c);
     uv += normalize(c + 1e-6) * sin(d*38.0 - uTime*13.0) * uShock * 0.006 * (1.0 - d);
   }
 
-  // chromatic aberration, strongest at the edges
   float ab = uAberration * (0.0016 + dot(c,c)*0.010);
   vec3 scene;
   scene.r = texture(uScene, uv + c*ab).r;
@@ -137,14 +114,12 @@ void main(){
   vec3 bloom = texture(uBloom, uv).rgb;
   vec3 col = scene + bloom * uBloomAmt;
 
-  // filmic-ish shoulder so the glow rolls off instead of clipping to white
   col = col / (col + vec3(0.92)) * 1.35;
   col *= 1.0 - 0.30*smoothstep(0.45, 1.15, length(c)*1.6);
 
   outColor = vec4(col, 1.0);
 }`;
 
-  /* ---------------- plumbing ---------------- */
   function compile(gl, vs, fs) {
     const mk = (type, src) => {
       const s = gl.createShader(type);
@@ -195,9 +170,6 @@ void main(){
     return [((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255];
   };
 
-  /* ============================================================
-     BACKDROP
-     ============================================================ */
   function createBackdrop(canvas) {
     const gl = ctxOf(canvas);
     if (!gl) return null;
@@ -209,7 +181,6 @@ void main(){
     let tick = 0;
 
     function resize() {
-      // half resolution: this is a soft background, nobody can tell
       dpr = Math.min(1.25, global.devicePixelRatio || 1) * 0.55;
       const w = Math.max(2, Math.round(global.innerWidth * dpr));
       const h = Math.max(2, Math.round(global.innerHeight * dpr));
@@ -226,7 +197,6 @@ void main(){
       if (o.depth != null) depth = o.depth;
     }
     function render(t) {
-      // 30fps is plenty for something this slow, and halves the fill cost
       if ((tick++ & 1) === 1) return;
       resize();
       gl.viewport(0, 0, W, H);
@@ -243,9 +213,6 @@ void main(){
     return { render, set, resize, gl };
   }
 
-  /* ============================================================
-     BLOOM / POST — takes a 2D canvas, returns a graded frame
-     ============================================================ */
   function createPost(canvas) {
     const gl = ctxOf(canvas);
     if (!gl) return null;
@@ -283,21 +250,18 @@ void main(){
       gl.drawArrays(gl.TRIANGLES, 0, 3);
     }
 
-    /** @param src  the 2D canvas holding this frame
-        @param o    { bloom, aberration, shock, time } */
     function draw(src, o) {
       o = o || {};
       resize(src.width, src.height);
       gl.bindTexture(gl.TEXTURE_2D, sceneTex);
       gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, src);
 
-      // 1 · bright pass into a
       pass(bright, a, loc => {
         gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, sceneTex);
         gl.uniform1i(loc.uTex, 0);
         gl.uniform1f(loc.uThreshold, o.threshold == null ? 0.52 : o.threshold);
       });
-      // 2 · separable blur, twice for a wider skirt
+
       for (let i = 0; i < 2; i++) {
         pass(blur, b, loc => {
           gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, a.tex);
@@ -310,7 +274,7 @@ void main(){
           gl.uniform2f(loc.uDir, 0, 1); gl.uniform2f(loc.uRes, b.w, b.h);
         });
       }
-      // 3 · composite to screen
+
       pass(comp, null, loc => {
         gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, sceneTex);
         gl.uniform1i(loc.uScene, 0);

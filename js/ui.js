@@ -1,6 +1,3 @@
-/* ============================================================
-   ui.js — panels, shops, evolution chains, genome tree, codex
-   ============================================================ */
 (function (global) {
   'use strict';
   const D = global.DATA, C = D.CONF, G = global.G, S = global.S, ECO = global.ECO;
@@ -13,7 +10,6 @@
   const dirty = { colonies: 1, evolve: 1, dungeon: 1, genome: 1, codex: 1 };
   let pickerOpen = false;
 
-  /* ---------------- icon maps ---------------- */
   const ROOM_ICON = {
     pool: 'colonies', warren: 'dungeon', garden: 'producer', bonepit: 'skull', sluice: 'pois',
     still: 'flask', vault: 'plunder', spikes: 'phys', vents: 'pois', ceiling: 'cavein',
@@ -49,7 +45,6 @@
     return 'spark';
   }
 
-  /* ---------------- helpers ---------------- */
   function markDirty(k) { if (k) dirty[k] = 1; else for (const x in dirty) dirty[x] = 1; }
   function afford(cur, amt) { return G.res[cur] >= amt - 1e-9; }
   const CUR_CLS = { bio: 'cost-bio', ess: 'cost-ess', gold: 'cost-gold', dna: 'cost-dna' };
@@ -57,7 +52,6 @@
     return '<small class="' + CUR_CLS[cur] + '">' + ico(global.ICON.RES_ICON[cur], { size: 9, w: 2 }) + fmt(amt) + '</small>';
   }
 
-  /** fill every <span data-ico="name"> in a subtree */
   function paintIcons(root) {
     (root || document).querySelectorAll('[data-ico]').forEach(n => {
       if (n.dataset.painted) return;
@@ -75,15 +69,12 @@
   }
   function paint(root) { paintIcons(root); paintPortraits(root); }
 
-  /* ================= LOG / TOAST / BANNER ================= */
   function log(html, cls) {
     const box = $('#log'); if (!box) return;
     box.insertBefore(el('p', cls || '', html), box.firstChild);
     while (box.children.length > 60) box.removeChild(box.lastChild);
   }
-  /* Notifications arrive one at a time, spaced far enough apart to actually be
-     read, and never while a teaching card is up. Four things unlocking at once
-     used to stack into an unreadable pile. */
+
   const toastQ = [];
   let toastLive = 0, toastLast = 0;
   function toast(iconName, title, sub, cls) {
@@ -131,7 +122,6 @@
     markDirty('codex');
   }
 
-  /* ================= TOP BAR ================= */
   function updateRes() {
     $('#resBio').textContent = fmt(G.res.bio);
     $('#resEss').textContent = fmt(G.res.ess);
@@ -151,14 +141,12 @@
     $('#waveBest').textContent = G.stats.bestWave ? '  ·  BEST ' + G.stats.bestWave : '';
     $('#btnDepthUp').disabled = !(G.depth < G.maxDepth || (G.bestInBiome[G.depth] || 0) >= b.waves) || G.depth >= D.BIOMES.length;
     $('#btnDepthDown').disabled = G.depth <= 1;
-    // the whole interface takes its accent from the depth you are standing in
     const r = document.documentElement;
     r.style.setProperty('--accent', b.glow);
     r.style.setProperty('--accent-soft', U.rgba(b.glow, .13));
     r.style.setProperty('--accent-line', U.rgba(b.glow, .34));
   }
 
-  /* ================= COLONIES ================= */
   function famUnlocked(f) { return G.stats.bestWave >= f.unlockWave || S.globalWave() >= f.unlockWave; }
   function maxPopBuy(col) {
     const f = D.FAM_BY_ID[col.fam];
@@ -276,7 +264,6 @@
     return h + '</div></div>';
   }
 
-  /* ================= EVOLVE ================= */
   function renderEvolve() {
     const pane = $('#pane-evolve');
     let h = '<div class="sec-h"><h4>Evolution Chains</h4><span class="sub">' +
@@ -322,7 +309,6 @@
     paint(pane);
   }
 
-  /* ================= DUNGEON ================= */
   function renderDungeon() {
     const pane = $('#pane-dungeon');
     let h = '<div class="sec-h"><h4>Dungeon Rooms</h4><span class="sub">carve · trap · fortify</span></div>';
@@ -351,7 +337,6 @@
     paint(pane);
   }
 
-  /* ================= GENOME ================= */
   function renderGenome() {
     const pane = $('#pane-genome');
     const gain = S.dnaGain();
@@ -410,7 +395,6 @@
     return '—';
   }
 
-  /* ================= CODEX ================= */
   function renderCodex() {
     const pane = $('#pane-codex');
     let h = '';
@@ -468,7 +452,6 @@
     paint(pane);
   }
 
-  /* ================= RIGHT COLUMN ================= */
   function renderEco() {
     const eco = G.eco;
     const pill = $('#stabPill');
@@ -535,7 +518,6 @@
     $('#adaptBody').innerHTML = h;
   }
 
-  /* ================= ABILITIES ================= */
   function refreshAbilities() {
     let h = '';
     for (const a of D.ABILITIES) {
@@ -564,7 +546,6 @@
     });
   }
 
-  /* ================= RAID BAR ================= */
   function refreshRaidBtn() {
     const btn = $('#btnRaid');
     btn.textContent = G.autoRaid ? 'Auto · pause' : 'Open the gates';
@@ -587,10 +568,7 @@
   }
   function afterRaid() { markDirty(); updateDepthBar(); }
 
-  /* ================= SPEED ================= */
   function speedOptions() {
-    // pause and half-speed are never gated — they are how you cope with the
-    // pace, not a reward. Faster than real time still has to be earned.
     const s = S.mutLvl('sing'), o = [1, 0.5, 0];
     if (s >= 1) o.splice(1, 0, 2);
     if (s >= 5) o.splice(1, 0, 3);
@@ -607,7 +585,6 @@
       'Nothing in this game is lost by slowing down.';
   }
 
-  /* ================= ACTIONS ================= */
   function doFound(famId) {
     const f = D.FAM_BY_ID[famId];
     if (!f || !famUnlocked(f)) return;
@@ -687,7 +664,6 @@
     markDirty('genome'); markDirty('colonies');
   }
 
-  /* ================= MODALS ================= */
   function modal(html) { $('#modalBody').innerHTML = html; paintIcons($('#modalBody')); $('#modalBg').classList.remove('hidden'); }
   function closeModal() { $('#modalBg').classList.add('hidden'); }
 
@@ -805,11 +781,6 @@
     $('#mHelpOk').onclick = closeModal;
   }
 
-  /* ================= TOOLTIPS ================= */
-  /* Tooltips carry most of this game's explanation, so on touch devices they
-     cannot be hover-only. There, a long-press opens the tip anchored to the
-     element, and any tap closes it — without swallowing the tap that a button
-     needs to actually fire. */
   function initTooltips() {
     const tip = $('#tooltip');
     let cur = null, pressTimer = 0, pressed = null, moved = false;
@@ -867,7 +838,6 @@
     document.addEventListener('touchcancel', () => { clearTimeout(pressTimer); pressed = null; hide(); }, { passive: true });
   }
 
-  /* ================= TABS ================= */
   function setTab(name) {
     activeTab = name;
     $$('#tabs .tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
@@ -887,7 +857,6 @@
     b.innerHTML = ico(G.settings.muted ? 'mute' : 'sound', { size: 15 });
   }
 
-  /* ================= EVENTS ================= */
   function initEvents() {
     $('#tabs').addEventListener('click', e => {
       const t = e.target.closest('.tab'); if (!t) return;
@@ -986,7 +955,6 @@
     });
   }
 
-  /* ================= TICK ================= */
   let acc = 0;
   function tick(dt) {
     acc += dt;

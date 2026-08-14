@@ -1,6 +1,3 @@
-/* ============================================================
-   render.js — battle stage, particles, damage numbers, biomes
-   ============================================================ */
 (function (global) {
   'use strict';
   const D = global.DATA, G = global.G, S = global.S, ECO = global.ECO;
@@ -9,19 +6,16 @@
   let cv, ctx, W = 1200, H = 620, dpr = 1, T = 0;
   let shakeAmt = 0, breachT = 0;
   let post = null, off = null, aberr = 0, shock = 0;
-  const parts = [];       // particles
-  const nums = [];        // damage numbers
-  const projs = [];       // projectiles
-  const rings = [];       // expanding rings
-  const waves = [];       // screen-wide sweeps
-  const ambient = [];     // background motes
+  const parts = [];
+  const nums = [];
+  const projs = [];
+  const rings = [];
+  const waves = [];
+  const ambient = [];
 
-  /* -------------------- FX API (called by combat) -------------------- */
   const FX = {
     damage(x, y, amount, color, crit, onMonster) {
       if (!G.settings.dmgNumbers) return;
-      // merge rapid hits on the same target into one growing number, otherwise
-      // a fast dungeon just paints an unreadable wall of digits
       for (let i = nums.length - 1; i >= 0; i--) {
         const n = nums[i];
         if (n.label || n.crit !== !!crit) continue;
@@ -70,12 +64,8 @@
   };
   global.FX = FX;
 
-  /* -------------------- setup -------------------- */
   function init(canvas) {
     cv = canvas;
-    // Try to own the visible canvas with WebGL and render the game to an
-    // offscreen 2D buffer that we post-process. If WebGL2 is missing we just
-    // draw straight to the screen exactly as before.
     post = global.GL && global.GL.supported ? global.GL.createPost(cv) : null;
     if (post) {
       off = document.createElement('canvas');
@@ -99,19 +89,16 @@
   }
   const px = x => x * W, py = y => y * H;
 
-  /* -------------------- background -------------------- */
   function drawBackground() {
     const b = S.biome();
     const g = ctx.createLinearGradient(0, 0, 0, H);
     g.addColorStop(0, b.sky[0]); g.addColorStop(1, b.sky[1]);
     ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
 
-    // deep glow behind the core
     const rg = ctx.createRadialGradient(px(.06), py(.6), 10, px(.06), py(.6), W * .42);
     rg.addColorStop(0, rgba(b.glow, .13)); rg.addColorStop(1, rgba(b.glow, 0));
     ctx.fillStyle = rg; ctx.fillRect(0, 0, W, H);
 
-    // parallax cave walls (deterministic per biome)
     const rnd = U.seeded('biome' + G.depth);
     ctx.fillStyle = rgba(b.rock, .55);
     ctx.beginPath(); ctx.moveTo(0, 0);
@@ -130,7 +117,6 @@
     }
     ctx.lineTo(W, H); ctx.closePath(); ctx.fill();
 
-    // stalactites
     ctx.fillStyle = rgba(b.rock, .8);
     const rnd3 = U.seeded('stal' + G.depth);
     for (let i = 0; i < 14; i++) {
@@ -138,11 +124,9 @@
       ctx.beginPath(); ctx.moveTo(x - w / 2, 0); ctx.lineTo(x + w / 2, 0); ctx.lineTo(x, h); ctx.closePath(); ctx.fill();
     }
 
-    // floor line
     ctx.strokeStyle = rgba(b.glow, .12); ctx.lineWidth = 2;
     ctx.beginPath(); ctx.moveTo(0, py(.94)); ctx.lineTo(W, py(.94)); ctx.stroke();
 
-    // ambient motes
     for (const a of ambient) {
       a.y -= a.sp * 0.01;
       if (a.y < -0.02) { a.y = 1.02; a.x = Math.random(); }
@@ -159,25 +143,25 @@
     const pulse = 1 + Math.sin(T * 2.2) * .07 + (breachT > 0 ? .25 : 0);
     const dying = CB.phase === 'fight' && !G.colonies.some(c => c.alive);
     const col = dying ? '#ff5f6d' : b.glow;
-    // pillar
+
     ctx.fillStyle = rgba(b.rock, .9);
     ctx.fillRect(x - 26, py(.28), 52, py(.66));
     ctx.fillStyle = rgba('#000000', .3); ctx.fillRect(x + 10, py(.28), 16, py(.66));
-    // heart
+
     const r = 30 * pulse;
     const g = ctx.createRadialGradient(x, y, 2, x, y, r * 2.2);
     g.addColorStop(0, rgba(col, .95)); g.addColorStop(.35, rgba(col, .4)); g.addColorStop(1, rgba(col, 0));
     ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, r * 2.2, 0, 6.28); ctx.fill();
     ctx.fillStyle = shade(col, .4);
     ctx.beginPath(); ctx.arc(x, y, r * .55, 0, 6.28); ctx.fill();
-    // veins
+
     ctx.strokeStyle = rgba(col, .5); ctx.lineWidth = 2;
     for (let i = 0; i < 6; i++) {
       const a = i * 1.047 + T * .2;
       ctx.beginPath(); ctx.moveTo(x + Math.cos(a) * r * .5, y + Math.sin(a) * r * .5);
       ctx.lineTo(x + Math.cos(a) * r * 1.5, y + Math.sin(a) * r * 1.5); ctx.stroke();
     }
-    // core integrity pips
+
     if (CB.phase === 'fight') {
       const n = Math.ceil(CB.coreMax), cur = Math.max(0, CB.core);
       for (let i = 0; i < n; i++) {
@@ -196,13 +180,12 @@
     ctx.lineTo(px(.925), py(.95)); ctx.lineTo(px(.925), py(.42));
     ctx.quadraticCurveTo(px(.95), py(.16), x, py(.18)); ctx.closePath(); ctx.fill();
     ctx.strokeStyle = rgba(b.glow, .18); ctx.lineWidth = 2; ctx.stroke();
-    // torchlight from outside
+
     const g = ctx.createRadialGradient(px(1.0), py(.55), 8, px(1.0), py(.55), W * .3);
     g.addColorStop(0, 'rgba(255,190,110,.18)'); g.addColorStop(1, 'rgba(255,190,110,0)');
     ctx.fillStyle = g; ctx.fillRect(px(.7), 0, W * .3, H);
   }
 
-  /* -------------------- units -------------------- */
   function bar(x, y, w, h, frac, color, bg) {
     ctx.fillStyle = bg || 'rgba(0,0,0,.55)';
     ctx.fillRect(x, y, w, h);
@@ -224,21 +207,18 @@
       const opt = { alpha: dead ? 0.16 : 1 };
       if (c.hitT > 0) { opt.c1 = '#ffffff'; opt.c2 = '#ffb3b3'; }
       const bounce = inFight && c.alive ? Math.abs(Math.sin(T * 3 + i)) * 2 : 0;
-      // scale with population (visual dopamine)
       const popScale = 1 + Math.min(0.55, Math.log10(Math.max(1, c.pop)) * 0.19);
       global.SPR.drawMonster(ctx, c.fam, c.stage, x, y - bounce, sz * popScale, T, opt);
 
       if (inFight) {
         const w = 46, bx = x - w / 2;
         if (!dead) {
-          // health above the creature
           bar(bx, Math.max(4, y - sz * popScale * 0.98 - 12), w, 5, c.hp / c.maxHp, f.colors[0]);
         } else {
           ctx.fillStyle = 'rgba(255,106,106,.5)'; ctx.font = '600 9px system-ui'; ctx.textAlign = 'center';
           ctx.fillText('ROUTED', x, y + 24);
         }
       }
-      // population badge
       if (!dead) {
         ctx.fillStyle = 'rgba(0,0,0,.55)';
         const label = '×' + U.fmt(c.pop);
@@ -289,7 +269,6 @@
           ctx.beginPath(); ctx.arc(x + Math.sin(a) * s * .2, y - s * (.3 + ((T * .8 + i * .3) % 1) * .6), 2.4, 0, 6.28); ctx.fill();
         }
       }
-      // health bar
       const w = h.legend ? 90 : 44, bx = x - w / 2, by = y - s * 1.02 - (h.legend ? 20 : 12);
       bar(bx, by, w, h.legend ? 7 : 5, h.hp / h.maxHp, h.legend ? '#ffcb61' : '#ff6d7d');
       if (h.legend) {
@@ -306,7 +285,6 @@
     }
   }
 
-  /* -------------------- fx layers -------------------- */
   function updateFX(dt) {
     for (let i = parts.length - 1; i >= 0; i--) {
       const p = parts[i]; p.t += dt;
@@ -328,7 +306,6 @@
   }
 
   function drawFX() {
-    // projectiles
     for (const p of projs) {
       const k = p.t / p.dur;
       const x = lerp(px(p.x1), px(p.x2), k), y = lerp(py(p.y1), py(p.y2), k) - Math.sin(k * Math.PI) * 18;
@@ -346,25 +323,21 @@
       }
       ctx.restore();
     }
-    // particles
     for (const p of parts) {
       const a = 1 - p.t / p.life;
       ctx.fillStyle = rgba(p.color, a * .85);
       ctx.beginPath(); ctx.arc(px(p.x), py(p.y), p.r * a, 0, 6.28); ctx.fill();
     }
-    // rings
     for (const r of rings) {
       const k = r.t / r.life;
       ctx.strokeStyle = rgba(r.color, (1 - k) * .6); ctx.lineWidth = 2.5 * (1 - k) + 0.5;
       ctx.beginPath(); ctx.arc(px(r.x), py(r.y), px(r.max) * k * 1.6, 0, 6.28); ctx.stroke();
     }
-    // waves — a shockwave crossing the corridor, not a screen-filling fog
     for (const w of waves) {
       const k = w.t / w.life;
       ctx.strokeStyle = rgba(w.color, (1 - k) * .26); ctx.lineWidth = 5 * (1 - k) + 1;
       ctx.beginPath(); ctx.ellipse(px(.08), py(w.y), W * .95 * k, H * .62 * k, 0, 0, 6.28); ctx.stroke();
     }
-    // damage numbers
     ctx.textAlign = 'center';
     for (const n of nums) {
       const a = clamp(1 - (n.t / n.life) * 1.1, 0, 1);
@@ -375,12 +348,10 @@
       ctx.fillStyle = rgba(n.color, a);
       ctx.fillText(n.txt, px(n.x), py(n.y));
     }
-    // breach flash
     if (breachT > 0) {
       ctx.fillStyle = rgba('#ff5f6d', breachT * .3);
       ctx.fillRect(0, 0, W, H);
     }
-    // buff vignette
     if (G.buffs.frenzy > 0 || G.buffs.apocalypse > 0) {
       const g = ctx.createRadialGradient(W / 2, H / 2, H * .3, W / 2, H / 2, H * .9);
       g.addColorStop(0, 'rgba(255,0,40,0)'); g.addColorStop(1, 'rgba(255,40,60,.18)');
@@ -407,7 +378,6 @@
       ctx.fillStyle = 'rgba(255,255,255,.32)';
       ctx.fillText(alive + ' / ' + CB.heroes.length + ' heroes', W - 12, 20);
     }
-    // active buffs
     let bx = 12, by = H - 14;
     ctx.textAlign = 'left'; ctx.font = '700 10px system-ui';
     for (const k in G.buffs) {
@@ -419,7 +389,6 @@
     }
   }
 
-  /* -------------------- main frame -------------------- */
   function frame(dt) {
     if (!ctx) return;
     T += dt;
@@ -437,8 +406,6 @@
     drawFX();
     drawHUD();
 
-    // real post-processing: bright pass -> blur -> additive composite,
-    // with chromatic aberration and a ripple on heavy impacts
     if (post) {
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       post.draw(off, {
@@ -452,10 +419,6 @@
     }
   }
 
-  /* -------------------- cold open --------------------
-     A black room with something breathing in it: drifting spores, a
-     slow pulse of light, and shapes that only half resolve.
-  ---------------------------------------------------- */
   function bootAnim(canvas) {
     const c = canvas.getContext('2d');
     let t = 0, raf, w = 0, h = 0, dp = 1;
@@ -479,7 +442,6 @@
       t += 0.016;
       c.clearRect(0, 0, w, h);
 
-      // the pulse: something large and alive, just out of focus
       const pulse = .5 + Math.sin(t * .5) * .5;
       const cx = w * .5, cy = h * .56;
       const g = c.createRadialGradient(cx, cy, 4, cx, cy, Math.max(w, h) * (.30 + pulse * .07));
@@ -488,8 +450,6 @@
       g.addColorStop(1, 'rgba(92,232,154,0)');
       c.fillStyle = g; c.fillRect(0, 0, w, h);
 
-      // half-resolved silhouettes creeping along the floor — atmosphere, not
-      // illustration: blurred, desaturated, never fully in focus
       c.save();
       if ('filter' in c) c.filter = 'blur(3px) saturate(.35)';
       shapes.forEach((f, i) => {
@@ -503,7 +463,6 @@
       c.restore();
       if ('filter' in c) c.filter = 'none';
 
-      // spore drift
       for (const m of motes) {
         m.y -= m.sp * .012;
         if (m.y < -.03) { m.y = 1.03; m.x = Math.random(); }
@@ -514,7 +473,6 @@
         c.fill();
       }
 
-      // floor line
       c.strokeStyle = 'rgba(233,231,225,.05)'; c.lineWidth = 1;
       c.beginPath(); c.moveTo(0, h * .88); c.lineTo(w, h * .88); c.stroke();
 

@@ -1,13 +1,6 @@
-/* ============================================================
-   sprites.js — 100% procedural creature art (canvas 2D)
-   Nothing is loaded from disk or network: every monster and hero
-   is drawn from primitives, so there is no asset licence at all.
-   ============================================================ */
 (function (global) {
   'use strict';
   const { rgba, shade, seeded, clamp, lerp } = global.U;
-
-  /* ---------- tiny drawing helpers ---------- */
   function blob(ctx, w, h, wob, t, seed) {
     const pts = 14;
     ctx.beginPath();
@@ -38,10 +31,6 @@
     ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
   }
 
-  /* ============================================================
-     MONSTERS
-     draw in local space: feet at y=0, height ~ -1..0, width -.6..6
-     ============================================================ */
   const MSHAPE = {
 
     blob(ctx, p) {
@@ -694,9 +683,6 @@
     }
   };
 
-  /* ============================================================
-     HEROES — shared humanoid base + kit
-     ============================================================ */
   function humanoid(ctx, p, kit) {
     const { color, t, rnd, st } = p;
     const skin = '#e8c9a0';
@@ -857,9 +843,6 @@
     seraph: (c, p) => humanoid(c, p, { robe: 1, halo: 1, wings: 1, staff: 1, orb: '#fff6d6' })
   };
 
-  /* ============================================================
-     PUBLIC API
-     ============================================================ */
   function drawMonster(ctx, famId, stage, x, y, size, t, opt) {
     opt = opt || {};
     const f = global.DATA.FAM_BY_ID[famId];
@@ -898,7 +881,6 @@
     ctx.restore();
   }
 
-  /** render a static thumbnail into a small canvas element */
   function portrait(canvas, kind, a, b) {
     const dpr = Math.min(2, global.devicePixelRatio || 1);
     const w = canvas.clientWidth || 48, h = canvas.clientHeight || 48;
@@ -906,7 +888,6 @@
     const ctx = canvas.getContext('2d');
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, w, h);
-    // `b` is a stage index for monsters and a colour string for heroes
     if (kind === 'monster') drawMonster(ctx, a, +b || 0, w / 2, h * 0.92, h * 0.78, 0.6, { noShadow: true });
     else drawHero(ctx, a, String(b), w / 2, h * 0.94, h * 0.82, 0.6, { noShadow: true });
   }

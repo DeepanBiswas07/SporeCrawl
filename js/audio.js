@@ -1,6 +1,3 @@
-/* ============================================================
-   audio.js — 100% procedural WebAudio SFX (no files, no licences)
-   ============================================================ */
 (function (global) {
   'use strict';
 
@@ -14,7 +11,6 @@
     ctx = new AC();
     master = ctx.createGain();
     master.gain.value = 0.20;
-    // gentle limiter so overlapping hits never clip
     const comp = ctx.createDynamicsCompressor();
     comp.threshold.value = -14; comp.knee.value = 22; comp.ratio.value = 8;
     comp.attack.value = 0.004; comp.release.value = 0.18;
@@ -57,7 +53,6 @@
     s.start(t); s.stop(t + dur + 0.05);
   }
 
-  /* throttle: never more than N of the same sound per window */
   function gate(name, ms) {
     const now = performance.now();
     if (lastPlay[name] && now - lastPlay[name] < ms) return false;
@@ -116,17 +111,12 @@
 
   function ready() { if (muted || !sfxOn) return false; if (!ctx) init(); if (!ctx) return false; resume(); return true; }
 
-  /* ------------------------------------------------------------
-     Everything pitched lives on one scale (F minor pentatonic), so
-     stacked sounds stay consonant instead of turning into beeps.
-     ------------------------------------------------------------ */
-  const SCALE = [174.61, 207.65, 233.08, 261.63, 311.13];  // F Ab Bb C Eb
+  const SCALE = [174.61, 207.65, 233.08, 261.63, 311.13];
   function deg(n) {
     const oct = Math.floor(n / SCALE.length), i = ((n % SCALE.length) + SCALE.length) % SCALE.length;
     return SCALE[i] * Math.pow(2, oct);
   }
 
-  /* ---------------- ambient bed ---------------- */
   let amb = null;
   function startAmbience() {
     if (!ambienceOn || !ready() || amb) return;
@@ -136,7 +126,6 @@
     bus.gain.exponentialRampToValueAtTime(0.11, t + 12);
     bus.connect(master);
 
-    // two detuned low oscillators = a room tone with a slow beat in it
     const mk = (f, type, g) => {
       const o = ctx.createOscillator(); o.type = type; o.frequency.value = f;
       const gg = ctx.createGain(); gg.gain.value = g;
@@ -147,7 +136,6 @@
     const b = mk(deg(-7) * 1.004, 'sine', 0.07);
     const c = mk(deg(-3), 'sine', 0.025);
 
-    // slow filtered noise: air moving through stone
     const s = ctx.createBufferSource();
     if (!noiseBuf) { noise(t, 0.001, 0.0001, 400, 1); }
     s.buffer = noiseBuf; s.loop = true;
@@ -155,7 +143,6 @@
     const ng = ctx.createGain(); ng.gain.value = 0.016;
     s.connect(f2); f2.connect(ng); ng.connect(bus); s.start(t);
 
-    // breathing LFO on the whole bed
     const lfo = ctx.createOscillator(); lfo.frequency.value = 0.055;
     const lg = ctx.createGain(); lg.gain.value = 0.035;
     lfo.connect(lg); lg.connect(bus.gain); lfo.start(t);
@@ -192,7 +179,6 @@
     amb = null;
   }
 
-  /* a slow glassy chime for progressive-disclosure moments */
   SFX.reveal = function () {
     if (!ready()) return;
     const t = ctx.currentTime;
@@ -208,7 +194,6 @@
   SFX.stopAmbience = stopAmbience;
   SFX.deg = deg;
 
-  /** a soft two-note confirmation when a teaching objective is completed */
   SFX.objective = function () {
     if (!ready()) return;
     const t = ctx.currentTime;

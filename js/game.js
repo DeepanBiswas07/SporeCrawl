@@ -1,6 +1,3 @@
-/* ============================================================
-   game.js — boot, main loop, offline progress, prestige
-   ============================================================ */
 (function (global) {
   'use strict';
   const D = global.DATA, C = D.CONF, G = global.G, S = global.S, ECO = global.ECO, CB = global.CB;
@@ -8,7 +5,6 @@
 
   let running = false, lastFrame = 0, saveAcc = 0, achAcc = 0, playAcc = 0, autoAcc = 0;
 
-  /* ---------------- achievements ---------------- */
   function checkAchievements() {
     for (const a of D.ACHIEVEMENTS) {
       if (G.ach[a.id]) continue;
@@ -25,7 +21,6 @@
     }
   }
 
-  /* ---------------- unlock notifications ---------------- */
   function checkUnlocks() {
     const best = G.stats.bestWave;
     for (const f of D.FAMS) {
@@ -71,23 +66,18 @@
     }
   }
 
-  /* ---------------- main loop ----------------
-     Simulation and rendering are deliberately separate. The dungeon keeps
-     eating on a timer even when the tab is hidden and rAF stops firing;
-     the canvas only redraws when there is actually a frame to draw.
-  -------------------------------------------- */
   let lastSim = 0, simTimer = null;
 
   function simTick() {
     if (!running) return;
     try {
-    const now = performance.now();
-    let dt = (now - lastSim) / 1000;
-    lastSim = now;
-    if (!isFinite(dt) || dt < 0) dt = 0;
-    dt = Math.min(dt, 1.0);   // anything longer is handled by offline progress
-    const speed = (G.settings.speed == null ? 1 : G.settings.speed) * S.mutVal('sing');
-    step(dt * speed, dt);
+      const now = performance.now();
+      let dt = (now - lastSim) / 1000;
+      lastSim = now;
+      if (!isFinite(dt) || dt < 0) dt = 0;
+      dt = Math.min(dt, 1.0);
+      const speed = (G.settings.speed == null ? 1 : G.settings.speed) * S.mutVal('sing');
+      step(dt * speed, dt);
     } catch (e) { global.Guard.report(e, 'simulation'); }
   }
 
@@ -95,7 +85,7 @@
 
   function loop(now) {
     if (!running) return;
-    requestAnimationFrame(loop);   // re-queued FIRST so a throw below cannot end the loop
+    requestAnimationFrame(loop);
     let dt = (now - lastFrame) / 1000;
     lastFrame = now;
     if (!isFinite(dt) || dt < 0) dt = 0;
@@ -103,24 +93,23 @@
     glT += dt;
 
     try {
-    if (backdrop) {
-      const B = CB.B;
-      // the room reacts: hotter mid-raid, arterial when the core is exposed
-      const alive = B.phase === 'fight' ? B.heroes.filter(h => h.alive).length : 0;
-      const heat = B.phase === 'fight' ? Math.min(1, 0.35 + alive / 12) : 0.1;
-      const exposed = B.phase === 'fight' && !G.colonies.some(c => c.alive);
-      const pulse = exposed ? Math.min(1, 1 - (B.core / Math.max(1, B.coreMax))) : 0;
-      backdrop.set({
-        accent: S.biome().glow,
-        heat: heat,
-        pulse: pulse,
-        depth: (G.depth - 1) / Math.max(1, D.BIOMES.length - 1)
-      });
-      backdrop.render(glT);
-    }
+      if (backdrop) {
+        const B = CB.B;
+        const alive = B.phase === 'fight' ? B.heroes.filter(h => h.alive).length : 0;
+        const heat = B.phase === 'fight' ? Math.min(1, 0.35 + alive / 12) : 0.1;
+        const exposed = B.phase === 'fight' && !G.colonies.some(c => c.alive);
+        const pulse = exposed ? Math.min(1, 1 - (B.core / Math.max(1, B.coreMax))) : 0;
+        backdrop.set({
+          accent: S.biome().glow,
+          heat: heat,
+          pulse: pulse,
+          depth: (G.depth - 1) / Math.max(1, D.BIOMES.length - 1)
+        });
+        backdrop.render(glT);
+      }
 
-    global.R.frame(dt);
-    global.UI.tick(dt);
+      global.R.frame(dt);
+      global.UI.tick(dt);
     } catch (e) { global.Guard.report(e, 'render'); }
   }
 
@@ -128,23 +117,18 @@
     S.recalc();
     ECO.recompute();
 
-    // Hard pause while a teaching card is up, or while the player has paused.
-    // Reading an explanation should never cost you three raids.
     if (global.REVEAL.isShowing() || G.settings.speed === 0) {
       playAcc += realDt; G.stats.playTime += realDt;
       return;
     }
 
-    // passive income
     G.res.bio += G.eco.bioRate * dt;
     G.res.ess += G.eco.essRate * dt;
     G.stats.totalBio += G.eco.bioRate * dt;
 
-    // cooldowns & buffs
     for (const k in G.abil) if (G.abil[k] > 0) G.abil[k] = Math.max(0, G.abil[k] - dt);
     for (const k in G.buffs) if (G.buffs[k] > 0) G.buffs[k] = Math.max(0, G.buffs[k] - dt);
 
-    // battle
     if (CB.B.phase === 'fight') {
       CB.update(dt);
     } else {
@@ -152,7 +136,6 @@
       if (G.autoRaid && CB.B.gap <= 0) CB.startRaid();
     }
 
-    // auto-breed: spends only spare biomass, never the reserve you are saving
     autoAcc += realDt;
     if (autoAcc > 0.5) {
       autoAcc = 0;
@@ -166,7 +149,6 @@
       }
     }
 
-    // timers
     playAcc += realDt; G.stats.playTime += realDt;
     achAcc += realDt;
     if (achAcc > 1) {
@@ -180,7 +162,6 @@
     if (saveAcc > 20) { saveAcc = 0; S.save(); }
   }
 
-  /* ---------------- offline ---------------- */
   function offlineProgress() {
     const now = Date.now();
     const elapsed = Math.max(0, (now - (G.lastTick || now)) / 1000);
@@ -191,12 +172,10 @@
 
     S.recalc(); ECO.recompute();
 
-    // passive
     let bio = G.eco.bioRate * t * eff;
     let ess = G.eco.essRate * t * eff;
     let gold = 0;
 
-    // simulated raids at the current depth, assuming you clear them
     const gw = S.globalWave();
     const ru = D.rewardUnit(gw);
     const party = CB.partySize(gw);
@@ -228,7 +207,6 @@
     $('#offOk').onclick = UI.closeModal;
   }
 
-  /* ---------------- prestige ---------------- */
   function resetRun(hard) {
     G.colonies = [];
     G.rooms = {};
@@ -263,8 +241,6 @@
     if (gain < 1) return;
     G.res.cell += gain;
     G.stats.rebirths++;
-    // a Rebirth resets the run but never the genome — cells are pure gain,
-    // earned by total lifetime depth rather than by any single cycle
     resetRun(false);
     global.SFX.prestige();
     UI.banner('PRIMORDIAL REBIRTH', fmt(gain) + ' cells · Mythic unlocked', '#6fd8ef');
@@ -274,17 +250,13 @@
     S.save();
   }
 
-  /* ---------------- boot ---------------- */
   function startGame(fresh) {
     $('#boot').classList.add('hidden');
     $('#app').classList.remove('hidden');
 
-    // the ecosystem must be computed before any panel renders — the colony
-    // list reads derived values straight out of G.eco
     S.recalc();
     ECO.recompute();
 
-    // living WebGL backdrop behind the entire interface
     if (global.GL && global.GL.supported) {
       backdrop = global.GL.createBackdrop($('#bgfx'));
       if (backdrop) document.body.classList.add('has-gl');
@@ -294,7 +266,6 @@
     global.SFX.setMuted(!!G.settings.muted);
     global.UI.init();
 
-    // progressive disclosure: veil everything that has not been earned yet
     if (global.Store.ephemeral) global.Store.warnOnce();
     global.REVEAL.init(fresh);
     global.SFX.startAmbience();
@@ -302,7 +273,6 @@
     if (fresh) {
       UI.log('You wake up.', 'g');
       UI.log('Something is walking toward the entrance.', '');
-      // the opening decree fires from REVEAL.check on the first tick
     } else {
       UI.log('You return to the dark.', '');
       offlineProgress();
@@ -346,7 +316,6 @@
     $('#btnNewGame').onclick = () => {
       global.SFX.init();
       if (!has) return fresh();
-      // never a native dialog — some embedders suppress them outright
       $('#modalBody').innerHTML =
         '<h2>Start over?</h2><p>Your current dungeon, its genome and everything it remembers will be erased. ' +
         'There is no undo.</p><div class="mrow">' +

@@ -14,7 +14,6 @@
   <g transform="translate(256 256) scale(0.76) translate(-256 -256)">
   <circle cx="256" cy="238" r="230" fill="url(#halo)"/>
 
-  <!-- spores drifting off the cap -->
   <g fill="#5ce89a">
     <circle cx="392" cy="122" r="13" opacity=".85"/>
     <circle cx="436" cy="186" r="8"  opacity=".55"/>
@@ -23,14 +22,11 @@
     <circle cx="66"  cy="212" r="6"  opacity=".35"/>
   </g>
 
-  <!-- stem -->
   <path d="M224 286h64v92c0 26-13 40-32 40s-32-14-32-40z" fill="#123d2a"/>
   <path d="M256 286v132" stroke="#5ce89a" stroke-width="7" stroke-linecap="round" opacity=".5"/>
 
-  <!-- cap -->
   <path d="M62 292c0-107 87-194 194-194s194 87 194 194z" fill="url(#cap)"/>
 
-  <!-- gills: the spore print, radiating from the stem -->
   <g stroke="#06070a" stroke-width="9" stroke-linecap="round" opacity=".55">
     <path d="M256 292V150"/>
     <path d="M198 292l-30-124"/>
@@ -41,7 +37,6 @@
     <path d="M412 292l30-40"/>
   </g>
 
-  <!-- cap rim -->
   <path d="M62 292h388" stroke="#0c2a1d" stroke-width="14" stroke-linecap="round"/>
   </g>
 </svg>

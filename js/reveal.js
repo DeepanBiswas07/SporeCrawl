@@ -1,16 +1,7 @@
-/* ============================================================
-   reveal.js — progressive disclosure
-   The game opens as a black room with one button. Every panel,
-   currency, tab and mechanic is veiled until the moment it first
-   matters, then it is unveiled with a single line of text.
-   Modelled on A Dark Room / Universal Paperclips pacing.
-   ============================================================ */
 (function (global) {
   'use strict';
   const D = global.DATA, G = global.G, S = global.S;
 
-  /* Every veiled thing in the UI, addressed by key.
-     `sel` may be a selector or a list of them. */
   const TARGETS = {
     resBio: '#resBioWrap',
     resEss: '#resEssWrap',
@@ -43,14 +34,6 @@
     buyAmt: '[data-veil="buyamt"]'
   };
 
-  /* ---------------- the ladder ----------------
-     order matters; each fires once, ever.
-     when(g)  -> boolean
-     unveil   -> target keys to reveal
-     title    -> the decree headline (optional)
-     body     -> one line of diegetic text (optional)
-     tab      -> switch to this tab when it fires
-  -------------------------------------------- */
   const STEPS = [
     {
       id: 'awake',
@@ -209,7 +192,6 @@
   function isDone(id) { return !!(G.revealed && G.revealed[id]); }
   function markDone(id) { (G.revealed = G.revealed || {})[id] = 1; }
 
-  /** hide everything that has not been earned yet */
   function applyVeils() {
     const shown = {};
     for (const st of STEPS) {
@@ -222,7 +204,6 @@
     }
   }
 
-  /** unveil without ceremony (used when loading a save) */
   function unveilSilently(keys) {
     (keys || []).forEach(k => el(k).forEach(n => n.classList.remove('veiled')));
   }
@@ -239,10 +220,6 @@
     }));
   }
 
-  /* ---------------- the decree ----------------
-     A teaching card. It waits for the player, it does not time out —
-     nobody learns a mechanic from three seconds of fading text.
-  ---------------------------------------------- */
   function decree(title, body, then) {
     const dim = document.getElementById('dimmer');
     const box = document.getElementById('decree');
@@ -279,7 +256,6 @@
     const st = queue.shift();
     const run = () => { unveilWithFlash(st.unveil); if (st.tab) global.UI.setTab(st.tab); };
     if (st.title) {
-      // put the new UI on screen first so it is visibly there behind the card
       run();
       decree(st.title, st.body, () => { showing = false; setTimeout(pump, 500); });
     } else {
@@ -289,7 +265,6 @@
     }
   }
 
-  /** called every second from the main loop */
   function check() {
     for (const st of STEPS) {
       if (isDone(st.id)) continue;
@@ -302,14 +277,10 @@
     pump();
   }
 
-  /** first paint: veil everything unearned, silently show what was earned before */
   function init(freshGame) {
     G.revealed = G.revealed || {};
     if (freshGame) G.revealed = {};
 
-    // A save made before this system existed has no reveal record. Do not
-    // re-stage the whole tutorial at someone mid-run: grant everything they
-    // already qualify for, silently, and only ceremony the rest.
     if (!freshGame && !Object.keys(G.revealed).length && G.stats.bestWave > 0) {
       for (const st of STEPS) {
         let ok = false;
@@ -324,7 +295,6 @@
     }
   }
 
-  /** how much of the game has been opened up, for the stats screen */
   function progress() {
     const done = STEPS.filter(s => isDone(s.id)).length;
     return { done, total: STEPS.length };

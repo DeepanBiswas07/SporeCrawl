@@ -32,7 +32,7 @@ float fbm3(vec2 p){
 }
 float fbm(vec2 p){
   float a = 0.5, s = 0.0;
-  for(int i=0;i<5;i++){ s += a*noise(p); p *= 2.03; a *= 0.5; }
+  for(int i=0;i<4;i++){ s += a*noise(p); p *= 2.03; a *= 0.5; }
   return s;
 }
 
@@ -178,12 +178,14 @@ void main(){
     const vao = gl.createVertexArray();
     let W = 0, H = 0, dpr = 1;
     let accent = [0.36, 0.91, 0.60], heat = 0, pulse = 0, depth = 0;
-    let tick = 0;
+    let tick = 0, every = 2;
 
     function resize() {
-      dpr = Math.min(1.25, global.devicePixelRatio || 1) * 0.55;
-      const w = Math.max(2, Math.round(global.innerWidth * dpr));
-      const h = Math.max(2, Math.round(global.innerHeight * dpr));
+      const cap = 780;
+      const long = Math.max(global.innerWidth, global.innerHeight);
+      const scale = Math.min(0.55, cap / Math.max(1, long));
+      const w = Math.max(2, Math.round(global.innerWidth * scale));
+      const h = Math.max(2, Math.round(global.innerHeight * scale));
       if (w === W && h === H) return;
       W = w; H = h; canvas.width = W; canvas.height = H;
     }
@@ -197,7 +199,7 @@ void main(){
       if (o.depth != null) depth = o.depth;
     }
     function render(t) {
-      if ((tick++ & 1) === 1) return;
+      if (tick++ % every) return;
       resize();
       gl.viewport(0, 0, W, H);
       gl.useProgram(prog.p);
@@ -210,7 +212,7 @@ void main(){
       gl.uniform1f(prog.loc.uDepth, depth);
       gl.drawArrays(gl.TRIANGLES, 0, 3);
     }
-    return { render, set, resize, gl };
+    return { render, set, resize, gl, slow(){ every = 4; } };
   }
 
   function createPost(canvas) {

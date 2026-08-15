@@ -79,7 +79,7 @@
   }
   function resize() {
     if (!cv) return;
-    dpr = Math.min(post ? 1.5 : 2, global.devicePixelRatio || 1);
+    dpr = Math.min(post ? 1 : 2, global.devicePixelRatio || 1);
     const r = cv.getBoundingClientRect();
     W = Math.max(300, r.width); H = Math.max(200, r.height);
     const pw = Math.round(W * dpr), ph = Math.round(H * dpr);
@@ -421,16 +421,25 @@
 
   function bootAnim(canvas) {
     const c = canvas.getContext('2d');
-    let t = 0, raf, w = 0, h = 0, dp = 1;
+    const buf = document.createElement('canvas');
+    const bc = buf.getContext('2d');
+    let t = 0, raf, last = 0, w = 0, h = 0, sc = 1, grad = null;
     const motes = [];
     const shapes = ['ooze', 'fungus', 'arach', 'chiro', 'shade', 'aber'];
 
     function size() {
-      dp = Math.min(2, global.devicePixelRatio || 1);
       const r = canvas.getBoundingClientRect();
       w = Math.max(320, r.width); h = Math.max(240, r.height);
-      canvas.width = w * dp; canvas.height = h * dp;
-      c.setTransform(dp, 0, 0, dp, 0, 0);
+      sc = Math.min(1, 1280 / Math.max(w, h));
+      canvas.width = Math.round(w * sc); canvas.height = Math.round(h * sc);
+      c.setTransform(sc, 0, 0, sc, 0, 0);
+      buf.width = Math.max(1, Math.round(canvas.width * .5));
+      buf.height = Math.max(1, Math.round(canvas.height * .5));
+      const cx = w * .5, cy = h * .56;
+      grad = c.createRadialGradient(cx, cy, 4, cx, cy, Math.max(w, h) * .335);
+      grad.addColorStop(0, 'rgba(92,232,154,.14)');
+      grad.addColorStop(.5, 'rgba(92,232,154,.022)');
+      grad.addColorStop(1, 'rgba(92,232,154,0)');
     }
     size();
     global.addEventListener('resize', size);
@@ -438,33 +447,36 @@
       motes.push({ x: Math.random(), y: Math.random(), r: rand(.4, 1.9), sp: rand(.006, .03), ph: Math.random() * 6.28 });
     }
 
-    function loop() {
-      t += 0.016;
+    function loop(now) {
+      raf = requestAnimationFrame(loop);
+      if (now - last < 32) return;
+      const dt = last ? Math.min(.1, (now - last) / 1000) : .016;
+      last = now;
+      t += dt;
+
       c.clearRect(0, 0, w, h);
 
       const pulse = .5 + Math.sin(t * .5) * .5;
-      const cx = w * .5, cy = h * .56;
-      const g = c.createRadialGradient(cx, cy, 4, cx, cy, Math.max(w, h) * (.30 + pulse * .07));
-      g.addColorStop(0, 'rgba(92,232,154,' + (.09 + pulse * .05) + ')');
-      g.addColorStop(.5, 'rgba(92,232,154,.022)');
-      g.addColorStop(1, 'rgba(92,232,154,0)');
-      c.fillStyle = g; c.fillRect(0, 0, w, h);
+      c.globalAlpha = .64 + pulse * .36;
+      c.fillStyle = grad; c.fillRect(0, 0, w, h);
+      c.globalAlpha = 1;
 
-      c.save();
-      if ('filter' in c) c.filter = 'blur(3px) saturate(.35)';
+      bc.setTransform(1, 0, 0, 1, 0, 0);
+      bc.clearRect(0, 0, buf.width, buf.height);
+      bc.setTransform(sc * .5, 0, 0, sc * .5, 0, 0);
       shapes.forEach((f, i) => {
         const off = (t * .022 + i / shapes.length) % 1;
         const x = -.12 * w + off * w * 1.24;
         const y = h * (.95 + Math.sin(i * 2.3) * .04);
         const s = h * (.10 + (i % 3) * .022);
-        c.globalAlpha = (.03 + Math.sin(off * Math.PI) * .045);
-        global.SPR.drawMonster(c, f, (i % 4), x, y, s, t + i * 3, { noShadow: true, flip: i % 2 === 0 });
+        bc.globalAlpha = (.03 + Math.sin(off * Math.PI) * .045);
+        global.SPR.drawMonster(bc, f, (i % 4), x, y, s, t + i * 3, { noShadow: true, flip: i % 2 === 0 });
       });
-      c.restore();
-      if ('filter' in c) c.filter = 'none';
+      bc.globalAlpha = 1;
+      c.drawImage(buf, 0, 0, w, h);
 
       for (const m of motes) {
-        m.y -= m.sp * .012;
+        m.y -= m.sp * .72 * dt;
         if (m.y < -.03) { m.y = 1.03; m.x = Math.random(); }
         const a = .05 + Math.sin(t * 1.6 + m.ph) * .06;
         c.fillStyle = 'rgba(150,255,200,' + Math.max(0, a) + ')';
@@ -475,10 +487,8 @@
 
       c.strokeStyle = 'rgba(233,231,225,.05)'; c.lineWidth = 1;
       c.beginPath(); c.moveTo(0, h * .88); c.lineTo(w, h * .88); c.stroke();
-
-      raf = requestAnimationFrame(loop);
     }
-    loop();
+    raf = requestAnimationFrame(loop);
     return () => { cancelAnimationFrame(raf); global.removeEventListener('resize', size); };
   }
 

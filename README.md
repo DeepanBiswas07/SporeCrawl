@@ -8,10 +8,11 @@
 
 <br>
 
+[![play on itch.io](https://img.shields.io/badge/▶_play-itch.io-5ce89a?style=flat-square&labelColor=06070a)](https://deepan07.itch.io/sporecrawl)
 ![vanilla js](https://img.shields.io/badge/vanilla-JS_%2B_WebGL2-5ce89a?style=flat-square&labelColor=06070a)
 ![no dependencies](https://img.shields.io/badge/dependencies-none-5ce89a?style=flat-square&labelColor=06070a)
 ![no build step](https://img.shields.io/badge/build_step-none-5ce89a?style=flat-square&labelColor=06070a)
-![105 KB](https://img.shields.io/badge/download-105_KB-5ce89a?style=flat-square&labelColor=06070a)
+![94 KB](https://img.shields.io/badge/download-94_KB-5ce89a?style=flat-square&labelColor=06070a)
 ![~20 hours](https://img.shields.io/badge/playtime-~20_hours-5ce89a?style=flat-square&labelColor=06070a)
 
 </div>
@@ -29,9 +30,12 @@ starve in the dark.
 
 ## Play
 
-Sporecrawl runs entirely in the browser. No account, no install, and nothing is loaded
-from the network once the page has opened. Progress saves locally and the game works
-offline.
+**[Play Sporecrawl on itch.io →](https://deepan07.itch.io/sporecrawl)**
+
+It runs entirely in the browser. No account, no install, and nothing is loaded from the
+network once the page has opened. Progress saves locally and the game works offline.
+
+To run it from source instead:
 
 ```bash
 git clone https://github.com/DeepanBiswas07/SporeCrawl.git

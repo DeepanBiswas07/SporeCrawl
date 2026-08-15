@@ -81,7 +81,7 @@
     } catch (e) { global.Guard.report(e, 'simulation'); }
   }
 
-  let backdrop = null, glT = 0;
+  let backdrop = null, glT = 0, slowFrames = 0, quality = 2;
 
   function loop(now) {
     if (!running) return;
@@ -91,6 +91,16 @@
     if (!isFinite(dt) || dt < 0) dt = 0;
     dt = Math.min(dt, 0.25);
     glT += dt;
+
+    if (dt > 0.034) slowFrames++; else if (slowFrames > 0) slowFrames--;
+    if (slowFrames > 90 && quality === 2) { quality = 1; if (backdrop) backdrop.slow(); }
+    if (slowFrames > 240 && quality === 1) {
+      quality = 0;
+      backdrop = null;
+      const bg = $('#bgfx');
+      if (bg) bg.style.display = 'none';
+      document.body.classList.remove('has-gl');
+    }
 
     try {
       if (backdrop) {

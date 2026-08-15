@@ -850,8 +850,8 @@ textarea.savebox{
   .abil{padding:8px 5px}
 }
 
-/* Single column / Mobile */
-@media (max-width:900px){
+/* Single column / Mobile & Touch Portrait */
+@media (max-width:900px), (hover:none) and (orientation:portrait){
   html,body{
     height:auto;
     min-height:100%;

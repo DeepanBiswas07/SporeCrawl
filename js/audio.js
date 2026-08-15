@@ -214,5 +214,9 @@
   SFX.init = init;
   SFX.resume = resume;
 
+  ['touchend', 'click'].forEach(ev =>
+    global.addEventListener(ev, resume, { passive: true, capture: true }));
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) resume(); });
+
   global.SFX = SFX;
 })(this);

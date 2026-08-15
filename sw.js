@@ -1,4 +1,4 @@
-const CACHE = 'sporecrawl-v18';
+const CACHE = 'sporecrawl-v19';
 
 const CORE = [
   './',

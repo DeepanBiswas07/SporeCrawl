@@ -39,6 +39,8 @@
 }
 
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+input,textarea{-webkit-user-select:text;user-select:text}
 html,body{height:100%}
 body{
   background:var(--void);
@@ -186,7 +188,10 @@ body::before{
 .credit a:hover{color:var(--ink)}
 
 /* Topbar */
-.app{height:100%;display:flex;flex-direction:column}
+.app{
+  height:100%;display:flex;flex-direction:column;
+  padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
 
 .topbar{
   display:flex;align-items:center;gap:16px;flex:0 0 auto;z-index:20;
@@ -853,32 +858,30 @@ textarea.savebox{
 /* Single column / Mobile & Touch Portrait */
 @media (max-width:900px), (hover:none) and (orientation:portrait){
   html,body{
-    height:auto;
-    min-height:100%;
-    overflow-x:hidden;
-    overflow-y:auto;
-    overscroll-behavior-y:auto;
-    overscroll-behavior-x:none;
-    -webkit-overflow-scrolling:touch;
-    touch-action:pan-y;
+    height:100%;
+    overflow:hidden;
+    overscroll-behavior:none;
   }
-  body{
-    position:relative;
-    overflow-x:hidden;
-    overflow-y:auto;
-  }
+  body{position:relative}
   .app{
-    height:auto;
-    min-height:100%;
-    overflow:visible;
+    height:100%;
+    height:100dvh;
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
   }
   .layout{
     display:flex;
     flex-direction:column;
     gap:0;
-    min-height:auto;
+    flex:1 1 auto;
+    min-height:0;
     height:auto;
-    overflow:visible;
+    overflow-y:auto;
+    overflow-x:hidden;
+    -webkit-overflow-scrolling:touch;
+    overscroll-behavior:contain;
+    touch-action:pan-y;
   }
   .col{
     border-bottom:1px solid var(--rule);

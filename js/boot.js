@@ -103,13 +103,16 @@
     get active() { return !!(document.fullscreenElement || document.webkitFullscreenElement); },
     toggle() {
       try {
+        let p;
         if (FS.active) {
-          (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+          p = (document.exitFullscreen || document.webkitExitFullscreen).call(document);
         } else {
           const el = document.documentElement;
-          (el.requestFullscreen || el.webkitRequestFullscreen).call(el);
+          p = (el.requestFullscreen || el.webkitRequestFullscreen).call(el);
         }
-      } catch (e) { Guard.report(e, 'fullscreen'); }
+        // embedders that withhold allow="fullscreen" reject this; not worth a banner
+        if (p && p.catch) p.catch(() => { });
+      } catch (e) { }
     }
   };
 
